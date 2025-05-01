@@ -1,0 +1,64 @@
+---
+import { createClient } from '@supabase/supabase-js';
+import { useState, useEffect } from 'react';
+
+const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
+
+const [messages, setMessages] = useState([]);
+const [newMessage, setNewMessage] = useState('');
+
+useEffect(() => {
+  const fetchMessages = async () => {
+    const { data, error } = await supabase.from('messages').select('*').order('timestamp', { ascending: true });
+    if (data) setMessages(data);
+    if (error) console.error(error);
+  };
+
+  const subscription = supabase
+    .from('messages')
+    .on('INSERT', payload => {
+      setMessages(prev => [...prev, payload.new]);
+    })
+    .subscribe();
+
+  fetchMessages();
+
+  return () => {
+    supabase.removeSubscription(subscription);
+  };
+}, []);
+
+const sendMessage = async (event) => {
+  event.preventDefault();
+  const { error } = await supabase.from('messages').insert({
+    sender_id: supabase.auth.user().id,
+    receiver_id: 'receiver-id-placeholder', // Replace with actual receiver ID
+    message: newMessage,
+    timestamp: new Date().toISOString(),
+  });
+  if (error) console.error(error);
+  setNewMessage('');
+};
+---
+
+<div class="p-4 border rounded shadow-md">
+  <h2 class="text-xl font-bold mb-4">Chat</h2>
+  <div class="h-64 overflow-y-auto border p-2 mb-4">
+    {messages.map(msg => (
+      <div class="mb-2">
+        <p class="text-sm text-gray-500">{msg.sender_id}</p>
+        <p class="text-gray-800">{msg.message}</p>
+      </div>
+    ))}
+  </div>
+  <form onsubmit="sendMessage" class="flex">
+    <input
+      type="text"
+      value={newMessage}
+      oninput="e => setNewMessage(e.target.value)"
+      class="border p-2 rounded flex-grow mr-2"
+      placeholder="Type a message..."
+    />
+    <button type="submit" class="bg-blue-500 text-white p-2 rounded">Send</button>
+  </form>
+</div>
