@@ -1,0 +1,36 @@
+---
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
+
+async function createProject(event) {
+  event.preventDefault();
+  const { title, description, budget } = event.target;
+  const { error } = await supabase.from('projects').insert({
+    title: title.value,
+    description: description.value,
+    budget: parseFloat(budget.value),
+    client_id: supabase.auth.user().id,
+  });
+  if (error) console.error(error);
+}
+---
+
+<main class="p-4">
+  <h1 class="text-2xl font-bold mb-4">Post a New Project</h1>
+  <form onsubmit="createProject">
+    <label class="block mb-2">
+      Title:
+      <input type="text" name="title" class="border p-2 rounded w-full" required />
+    </label>
+    <label class="block mb-2">
+      Description:
+      <textarea name="description" class="border p-2 rounded w-full" required></textarea>
+    </label>
+    <label class="block mb-2">
+      Budget:
+      <input type="number" name="budget" class="border p-2 rounded w-full" required />
+    </label>
+    <button type="submit" class="bg-blue-500 text-white p-2 rounded">Post Project</button>
+  </form>
+</main>
