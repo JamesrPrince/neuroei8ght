@@ -1,34 +1,51 @@
-# Astro Starter Kit: Basics
+# NeuroEight Freelance Marketplace
 
-```sh
-npm create astro@latest -- --template basics
-```
+A modern freelance marketplace platform built with Astro, Supabase, and modern UI/UX principles. Connect talented designers and developers with clients seeking professional services.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+![NeuroEight Platform](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## ✨ Features
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+- **Modern UI/UX Design**: Sleek interfaces with gradient effects, animations, and responsive layouts
+- **User Authentication**: Secure login and registration system powered by Supabase
+- **Project Marketplace**: Browse, filter, and search available projects
+- **User Profiles**: Comprehensive profiles with portfolio showcasing and skill highlighting
+- **Project Creation**: Post new projects with detailed requirements and budgets
+- **Reviews & Ratings**: Leave and receive feedback on completed work
+- **Admin Dashboard**: Manage users, projects, and platform statistics
 
 ## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
 
 ```text
 /
 ├── public/
 │   └── favicon.svg
 ├── src/
+│   ├── assets/
+│   │   ├── astro.svg
+│   │   ├── background.svg
+│   │   └── styles.css
+│   ├── components/
+│   │   ├── Analytics.astro
+│   │   ├── AuthForm.astro
+│   │   ├── Chat.astro
+│   │   ├── Header.astro
+│   │   ├── ProjectCard.astro
+│   │   └── Welcome.astro
 │   ├── layouts/
 │   │   └── Layout.astro
 │   └── pages/
-│       └── index.astro
-└── package.json
+│       ├── admin.astro
+│       ├── index.astro
+│       ├── profile.astro
+│       └── projects.astro
+├── astro.config.mjs
+├── Dockerfile
+├── package.json
+├── tailwind.config.js
+├── tsconfig.json
+└── vercel.json
 ```
-
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
 
 ## 🧞 Commands
 
@@ -43,6 +60,53 @@ All commands are run from the root of the project, from a terminal:
 | `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `npm run astro -- --help` | Get help using the Astro CLI                     |
 
-## 👀 Want to learn more?
+## 🔧 Tech Stack
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- **Frontend**: Astro, TypeScript, Modern CSS with variables and animations
+- **Backend**: Supabase for authentication, database, and storage
+- **Deployment**: Docker containerization, Vercel hosting
+
+## 📚 Pages
+
+- **Home**: Landing page showcasing platform features and recent projects
+- **Projects**: Browse available projects with filtering and search capabilities
+- **Profile**: User profiles with portfolio, skills, reviews, and settings
+- **Admin**: Dashboard for platform management and analytics
+
+## 🚢 Deployment
+
+The platform is containerized using Docker for consistent development and production environments. Deployment is handled through Vercel with continuous integration.
+
+```bash
+# Build and run with Docker
+docker build -t neuroei8gt .
+docker run -p 4321:4321 neuroei8gt
+```
+
+## 🔒 Environment Variables
+
+To run this project, you need to set up the following environment variables:
+
+```
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_anon_key
+```
+
+## 🌟 Future Enhancements
+
+- Real-time messaging between clients and freelancers
+- Advanced project matching algorithm
+- Payment processing integration
+- Mobile application with shared codebase
+
+## 📝 License
+
+MIT
+
+## 👥 Contributors
+
+- [James Prince](https://github.com/JamesrPrince)
+
+---
+
+Built with ❤️ using [Astro](https://astro.build)
