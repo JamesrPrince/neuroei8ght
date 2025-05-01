@@ -5,6 +5,7 @@ import { useState } from 'react';
 const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
 
 const [profile, setProfile] = useState({ name: '', bio: '', skills: '', portfolio: [] });
+const [reviews, setReviews] = useState([]);
 
 async function fetchProfile() {
   const { data, error } = await supabase.from('profiles').select('*').single();
@@ -18,7 +19,28 @@ async function updateProfile(event) {
   if (error) console.error(error);
 }
 
+async function fetchReviews() {
+  const { data, error } = await supabase.from('ratings').select('*').eq('reviewee_id', supabase.auth.user().id);
+  if (data) setReviews(data);
+  if (error) console.error(error);
+}
+
+async function submitReview(event) {
+  event.preventDefault();
+  const { rating, comment } = event.target;
+  const { error } = await supabase.from('ratings').insert({
+    reviewer_id: supabase.auth.user().id,
+    reviewee_id: 'reviewee-id-placeholder', // Replace with actual reviewee ID
+    rating: parseInt(rating.value),
+    comment: comment.value,
+    project_id: 'project-id-placeholder', // Replace with actual project ID
+  });
+  if (error) console.error(error);
+  fetchReviews();
+}
+
 fetchProfile();
+fetchReviews();
 ---
 
 <main class="p-4">
@@ -51,4 +73,42 @@ fetchProfile();
       ))}
     </div>
   </section>
+
+  <section class="mt-8">
+    <h2 class="text-xl font-bold mb-4">Submit a Review</h2>
+    <form onsubmit="submitReview" class="mb-8">
+      <label class="block mb-2">
+        Rating (1-5):
+        <input type="number" name="rating" min="1" max="5" class="border p-2 rounded w-full" required />
+      </label>
+      <label class="block mb-2">
+        Comment:
+        <textarea name="comment" class="border p-2 rounded w-full" required></textarea>
+      </label>
+      <button type="submit" class="bg-blue-500 text-white p-2 rounded">Submit Review</button>
+    </form>
+
+    <h2 class="text-xl font-bold mb-4">Reviews</h2>
+    <div>
+      {reviews.map(review => (
+        <div class="mb-4 border p-4 rounded">
+          <p class="text-sm text-gray-500">Rating: {review.rating}</p>
+          <p class="text-gray-800">{review.comment}</p>
+          <p class="text-sm text-gray-500">Reviewer: {review.reviewer_id}</p>
+        </div>
+      ))}
+    </div>
+  </section>
 </main>
+
+<style>
+  @media (max-width: 768px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+
+    form {
+      padding: 1rem;
+    }
+  }
+</style>

@@ -6,6 +6,20 @@ import AuthForm from '../components/AuthForm.astro';
 // Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
+<style>
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 1.5rem;
+      text-align: center;
+    }
+
+    p {
+      font-size: 1rem;
+      padding: 0 1rem;
+    }
+  }
+</style>
+
 <Layout>
 	<AuthForm />
 </Layout>

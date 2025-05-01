@@ -1,0 +1,95 @@
+---
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
+
+let users = [];
+let projects = [];
+let disputes = [];
+
+async function fetchAdminData() {
+  const { data: userData, error: userError } = await supabase.from('users').select('*');
+  const { data: projectData, error: projectError } = await supabase.from('projects').select('*');
+  const { data: disputeData, error: disputeError } = await supabase.from('disputes').select('*');
+
+  if (userData) users = userData;
+  if (projectData) projects = projectData;
+  if (disputeData) disputes = disputeData;
+
+  if (userError || projectError || disputeError) {
+    console.error(userError || projectError || disputeError);
+  }
+}
+
+fetchAdminData();
+---
+
+<main class="p-4">
+  <h1 class="text-2xl font-bold mb-4">Admin Dashboard</h1>
+
+  <section class="mb-8">
+    <h2 class="text-xl font-bold mb-2">Users</h2>
+    <table class="table-auto w-full border">
+      <thead>
+        <tr>
+          <th class="border px-4 py-2">ID</th>
+          <th class="border px-4 py-2">Email</th>
+          <th class="border px-4 py-2">Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.map(user => (
+          <tr>
+            <td class="border px-4 py-2">{user.id}</td>
+            <td class="border px-4 py-2">{user.email}</td>
+            <td class="border px-4 py-2">{user.role}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="mb-8">
+    <h2 class="text-xl font-bold mb-2">Projects</h2>
+    <table class="table-auto w-full border">
+      <thead>
+        <tr>
+          <th class="border px-4 py-2">Title</th>
+          <th class="border px-4 py-2">Budget</th>
+          <th class="border px-4 py-2">Client ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {projects.map(project => (
+          <tr>
+            <td class="border px-4 py-2">{project.title}</td>
+            <td class="border px-4 py-2">${project.budget}</td>
+            <td class="border px-4 py-2">{project.client_id}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2 class="text-xl font-bold mb-2">Disputes</h2>
+    <table class="table-auto w-full border">
+      <thead>
+        <tr>
+          <th class="border px-4 py-2">ID</th>
+          <th class="border px-4 py-2">Description</th>
+          <th class="border px-4 py-2">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {disputes.map(dispute => (
+          <tr>
+            <td class="border px-4 py-2">{dispute.id}</td>
+            <td class="border px-4 py-2">{dispute.description}</td>
+            <td class="border px-4 py-2">{dispute.status}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+</main>
