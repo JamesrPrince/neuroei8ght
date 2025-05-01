@@ -1,114 +1,1157 @@
 ---
+import Layout from '../layouts/Layout.astro';
 import { createClient } from '@supabase/supabase-js';
-import { useState } from 'react';
 
 const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
 
-const [profile, setProfile] = useState({ name: '', bio: '', skills: '', portfolio: [] });
-const [reviews, setReviews] = useState([]);
-
-async function fetchProfile() {
-  const { data, error } = await supabase.from('profiles').select('*').single();
-  if (data) setProfile(data);
-  if (error) console.error(error);
+interface Profile {
+  name: string;
+  bio: string;
+  skills: string[];
+  portfolio: File[];
+  location: string;
+  hourlyRate: number;
+  availability: string;
 }
 
-async function updateProfile(event) {
-  event.preventDefault();
-  const { error } = await supabase.from('profiles').upsert(profile);
-  if (error) console.error(error);
+interface Review {
+  reviewer_id: string;
+  reviewee_id: string;
+  rating: number;
+  comment: string;
+  project_id: string;
+  reviewer_name: string;
+  date: Date;
+}
+
+let profile: Profile = { 
+  name: 'Jane Smith', 
+  bio: 'Creative UI/UX designer with 5 years of experience in mobile app and web design.',
+  skills: ['UI/UX Design', 'Figma', 'Adobe XD', 'Sketch', 'Prototyping', 'User Research'],
+  portfolio: [],
+  location: 'San Francisco, CA',
+  hourlyRate: 75,
+  availability: 'Part-time'
+};
+
+let reviews: Review[] = [
+  {
+    reviewer_id: '1',
+    reviewee_id: '123',
+    rating: 5,
+    comment: 'Jane delivered exceptional work on our e-commerce site redesign. Very professional and timely.',
+    project_id: 'p1',
+    reviewer_name: 'John Doe',
+    date: new Date('2025-04-15')
+  },
+  {
+    reviewer_id: '2',
+    reviewee_id: '123',
+    rating: 4,
+    comment: 'Great communication throughout the project. Would definitely work with again.',
+    project_id: 'p2',
+    reviewer_name: 'Sarah Johnson',
+    date: new Date('2025-03-22')
+  }
+];
+
+async function fetchProfile() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (data) profile = { ...profile, ...data };
+      if (error) console.error(error);
+    }
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+  }
 }
 
 async function fetchReviews() {
-  const { data, error } = await supabase.from('ratings').select('*').eq('reviewee_id', supabase.auth.user().id);
-  if (data) setReviews(data);
-  if (error) console.error(error);
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error } = await supabase.from('ratings').select('*').eq('reviewee_id', user.id || '');
+      if (data) reviews = data;
+      if (error) console.error(error);
+    }
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+  }
 }
 
-async function submitReview(event) {
+async function updateProfile(event: SubmitEvent) {
   event.preventDefault();
-  const { rating, comment } = event.target;
-  const { error } = await supabase.from('ratings').insert({
-    reviewer_id: supabase.auth.user().id,
-    reviewee_id: 'reviewee-id-placeholder', // Replace with actual reviewee ID
-    rating: parseInt(rating.value),
-    comment: comment.value,
-    project_id: 'project-id-placeholder', // Replace with actual project ID
-  });
-  if (error) console.error(error);
-  fetchReviews();
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error } = await supabase.from('profiles').upsert({
+        ...profile,
+        id: user.id
+      });
+      if (error) console.error(error);
+    }
+  } catch (error) {
+    console.error('Error updating profile:', error);
+  }
+}
+
+async function submitReview(event: SubmitEvent) {
+  event.preventDefault();
+  const target = event.target as HTMLFormElement;
+  const ratingInput = target.rating as HTMLInputElement;
+  const commentInput = target.comment as HTMLTextAreaElement;
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error } = await supabase.from('ratings').insert({
+        reviewer_id: user.id,
+        reviewee_id: 'reviewee-id-placeholder', // Replace with actual reviewee ID
+        rating: parseInt(ratingInput.value),
+        comment: commentInput.value,
+        project_id: 'project-id-placeholder', // Replace with actual project ID
+      });
+
+      if (error) console.error(error);
+      fetchReviews();
+    }
+  } catch (error) {
+    console.error('Error submitting review:', error);
+  }
 }
 
 fetchProfile();
 fetchReviews();
+
+// Calculate average rating
+const averageRating = reviews.length > 0
+  ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+  : 0;
+
+// Format average rating to one decimal place
+const formattedRating = averageRating.toFixed(1);
+
+// Sample portfolio projects
+const portfolioProjects = [
+  {
+    title: 'Mobile Banking App',
+    image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    description: 'Complete redesign of a mobile banking application',
+  },
+  {
+    title: 'E-commerce Website',
+    image: 'https://images.unsplash.com/photo-1546054454-aa26e2b734c7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    description: 'UX design and development for an online fashion store',
+  },
+  {
+    title: 'Food Delivery App',
+    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    description: 'UI/UX design for a food delivery platform',
+  },
+  {
+    title: 'Travel Platform',
+    image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    description: 'Travel planning application design',
+  }
+];
 ---
 
-<main class="p-4">
-  <h1 class="text-2xl font-bold mb-4">Edit Profile</h1>
-  <form onsubmit="updateProfile">
-    <label class="block mb-2">
-      Name:
-      <input type="text" value={profile.name} oninput="e => setProfile({ ...profile, name: e.target.value })" class="border p-2 rounded w-full" />
-    </label>
-    <label class="block mb-2">
-      Bio:
-      <textarea value={profile.bio} oninput="e => setProfile({ ...profile, bio: e.target.value })" class="border p-2 rounded w-full"></textarea>
-    </label>
-    <label class="block mb-2">
-      Skills:
-      <input type="text" value={profile.skills} oninput="e => setProfile({ ...profile, skills: e.target.value })" class="border p-2 rounded w-full" />
-    </label>
-    <label class="block mb-4">
-      Portfolio:
-      <input type="file" multiple onchange="e => setProfile({ ...profile, portfolio: [...e.target.files] })" class="border p-2 rounded w-full" />
-    </label>
-    <button type="submit" class="bg-blue-500 text-white p-2 rounded">Save Profile</button>
-  </form>
+<Layout>
+  <div class="profile-page">
+    <section class="profile-hero">
+      <div class="container">
+        <h1 class="page-title">My Profile</h1>
+        <p class="subtitle">Manage your professional profile and portfolio</p>
+      </div>
+      <div class="hero-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+      </div>
+    </section>
 
-  <section class="mt-8">
-    <h2 class="text-xl font-bold mb-4">Portfolio Gallery</h2>
-    <div class="grid grid-cols-2 gap-4">
-      {profile.portfolio.map(file => (
-        <img src={URL.createObjectURL(file)} alt="Portfolio item" class="border rounded" />
-      ))}
-    </div>
-  </section>
+    <section class="profile-content">
+      <div class="container">
+        <div class="profile-grid">
+          <!-- Sidebar -->
+          <div class="profile-sidebar">
+            <div class="profile-card" data-aos="fade-up">
+              <div class="profile-header">
+                <div class="profile-avatar">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" alt="Profile Picture" />
+                </div>
+                <h2 class="profile-name">{profile.name}</h2>
+                <p class="profile-title">UI/UX Designer</p>
+                <div class="profile-location">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{profile.location}</span>
+                </div>
+                <div class="profile-rating">
+                  <div class="stars">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <svg class={`star ${i < Math.round(averageRating) ? 'filled' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span class="rating-text">{formattedRating} ({reviews.length} reviews)</span>
+                </div>
+              </div>
+              <div class="profile-info">
+                <div class="info-item">
+                  <span class="info-label">Hourly Rate</span>
+                  <span class="info-value">${profile.hourlyRate}/hr</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Availability</span>
+                  <span class="info-value">{profile.availability}</span>
+                </div>
+              </div>
+              <div class="profile-actions">
+                <button class="action-button contact-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Contact Me
+                </button>
+                <button class="action-button download-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 00-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Resume
+                </button>
+              </div>
+            </div>
 
-  <section class="mt-8">
-    <h2 class="text-xl font-bold mb-4">Submit a Review</h2>
-    <form onsubmit="submitReview" class="mb-8">
-      <label class="block mb-2">
-        Rating (1-5):
-        <input type="number" name="rating" min="1" max="5" class="border p-2 rounded w-full" required />
-      </label>
-      <label class="block mb-2">
-        Comment:
-        <textarea name="comment" class="border p-2 rounded w-full" required></textarea>
-      </label>
-      <button type="submit" class="bg-blue-500 text-white p-2 rounded">Submit Review</button>
-    </form>
+            <div class="skills-card" data-aos="fade-up" data-aos-delay="100">
+              <h3 class="card-title">Skills</h3>
+              <div class="skills-list">
+                {profile.skills.map(skill => (
+                  <span class="skill-tag">{skill}</span>
+                ))}
+              </div>
+            </div>
+          </div>
 
-    <h2 class="text-xl font-bold mb-4">Reviews</h2>
-    <div>
-      {reviews.map(review => (
-        <div class="mb-4 border p-4 rounded">
-          <p class="text-sm text-gray-500">Rating: {review.rating}</p>
-          <p class="text-gray-800">{review.comment}</p>
-          <p class="text-sm text-gray-500">Reviewer: {review.reviewer_id}</p>
+          <!-- Main Content -->
+          <div class="profile-main">
+            <div class="tabs">
+              <button class="tab-button active" data-tab="about">About Me</button>
+              <button class="tab-button" data-tab="portfolio">Portfolio</button>
+              <button class="tab-button" data-tab="reviews">Reviews</button>
+              <button class="tab-button" data-tab="edit">Edit Profile</button>
+            </div>
+
+            <div class="tab-content" id="about-tab">
+              <div class="content-card" data-aos="fade-up">
+                <h3 class="card-title">About Me</h3>
+                <p class="bio-text">{profile.bio}</p>
+              </div>
+            </div>
+
+            <div class="tab-content hidden" id="portfolio-tab">
+              <div class="content-card" data-aos="fade-up">
+                <h3 class="card-title">My Portfolio</h3>
+                <div class="portfolio-grid">
+                  {portfolioProjects.map(project => (
+                    <div class="portfolio-item">
+                      <div class="portfolio-image">
+                        <img src={project.image} alt={project.title} />
+                        <div class="portfolio-overlay">
+                          <h4>{project.title}</h4>
+                          <p>{project.description}</p>
+                          <a href="#" class="view-project">View Project</a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-content hidden" id="reviews-tab">
+              <div class="content-card" data-aos="fade-up">
+                <h3 class="card-title">Client Reviews</h3>
+                <div class="reviews-list">
+                  {reviews.map(review => (
+                    <div class="review-item">
+                      <div class="review-header">
+                        <div class="reviewer-info">
+                          <h4>{review.reviewer_name}</h4>
+                          <p class="review-date">{review.date.toLocaleDateString()}</p>
+                        </div>
+                        <div class="review-rating">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <svg class={`star ${i < review.rating ? 'filled' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                              <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                            </svg>
+                          ))}
+                        </div>
+                      </div>
+                      <p class="review-comment">{review.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div class="content-card" data-aos="fade-up" data-aos-delay="100">
+                <h3 class="card-title">Leave a Review</h3>
+                <form onsubmit="submitReview" class="review-form">
+                  <div class="form-group">
+                    <label for="rating">Rating</label>
+                    <div class="rating-select">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <label class="rating-label">
+                          <input type="radio" name="rating" value={i + 1} required />
+                          <svg class="star" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                          </svg>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="comment">Your Review</label>
+                    <textarea id="comment" name="comment" class="form-control" rows="4" placeholder="Share your experience working with this professional" required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <button type="submit" class="submit-button">
+                      Submit Review
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="tab-content hidden" id="edit-tab">
+              <div class="content-card" data-aos="fade-up">
+                <h3 class="card-title">Edit Profile</h3>
+                <form onsubmit="updateProfile" class="profile-form">
+                  <div class="form-group">
+                    <label for="name">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      Full Name
+                    </label>
+                    <input 
+                      type="text" 
+                      id="name" 
+                      name="name" 
+                      class="form-control"
+                      value={profile.name}
+                      oninput="e => setProfile({ ...profile, name: e.target.value })"
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="bio">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                      </svg>
+                      Bio
+                    </label>
+                    <textarea 
+                      id="bio" 
+                      name="bio" 
+                      class="form-control" 
+                      rows="4"
+                      oninput="e => setProfile({ ...profile, bio: e.target.value })"
+                    >{profile.bio}</textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="location">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Location
+                    </label>
+                    <input 
+                      type="text" 
+                      id="location" 
+                      name="location" 
+                      class="form-control"
+                      value={profile.location}
+                      oninput="e => setProfile({ ...profile, location: e.target.value })"
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="hourlyRate">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Hourly Rate ($)
+                    </label>
+                    <input 
+                      type="number" 
+                      id="hourlyRate" 
+                      name="hourlyRate" 
+                      class="form-control"
+                      min="1"
+                      value={profile.hourlyRate}
+                      oninput="e => setProfile({ ...profile, hourlyRate: parseInt(e.target.value) })"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="availability">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Availability
+                    </label>
+                    <select 
+                      id="availability" 
+                      name="availability" 
+                      class="form-control"
+                      onchange="e => setProfile({ ...profile, availability: e.target.value })"
+                    >
+                      <option value="Full-time" selected={profile.availability === 'Full-time'}>Full-time</option>
+                      <option value="Part-time" selected={profile.availability === 'Part-time'}>Part-time</option>
+                      <option value="Freelance" selected={profile.availability === 'Freelance'}>Freelance</option>
+                      <option value="Not Available" selected={profile.availability === 'Not Available'}>Not Available</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="skills">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                      </svg>
+                      Skills (comma separated)
+                    </label>
+                    <input 
+                      type="text" 
+                      id="skills" 
+                      name="skills" 
+                      class="form-control"
+                      value={profile.skills.join(', ')}
+                      oninput="e => setProfile({ ...profile, skills: e.target.value.split(',').map(s => s.trim()) })"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="portfolio">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Portfolio Images
+                    </label>
+                    <input 
+                      type="file" 
+                      id="portfolio" 
+                      name="portfolio" 
+                      class="form-control" 
+                      multiple 
+                      accept="image/*"
+                      onchange="e => setProfile({ ...profile, portfolio: [...e.target.files] })"
+                    />
+                    <p class="help-text">Upload portfolio images (max 5MB each)</p>
+                  </div>
+                  
+                  <div class="form-group">
+                    <button type="submit" class="submit-button">
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
-  </section>
-</main>
+      </div>
+    </section>
+  </div>
+</Layout>
 
 <style>
-  @media (max-width: 768px) {
-    .grid {
-      grid-template-columns: 1fr;
-    }
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-    form {
-      padding: 1rem;
+  :root {
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
+    --accent-gradient: linear-gradient(135deg, #14b8a6 0%, #0ea5e9 50%, #6366f1 100%);
+    --text-gradient: linear-gradient(90deg, #3b82f6, #8b5cf6, #d946ef);
+    
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --accent-color: #14b8a6;
+    --text-color: #1e293b;
+    --text-light: #64748b;
+    --bg-light: #f8fafc;
+    --bg-lighter: #ffffff;
+    --bg-dark: #1e293b;
+    
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    
+    --border-radius-sm: 0.375rem;
+    --border-radius-md: 0.75rem;
+    --border-radius-lg: 1.5rem;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .profile-page {
+    background-color: var(--bg-light);
+    min-height: calc(100vh - 80px);
+  }
+
+  /* Hero Section */
+  .profile-hero {
+    position: relative;
+    padding: 4rem 0 3rem;
+    background-image: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
+    overflow: hidden;
+  }
+
+  .page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background-image: var(--text-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: fade-in 1s ease, slide-up 1s ease;
+  }
+
+  .subtitle {
+    font-size: 1.2rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    animation: fade-in 1.2s ease, slide-up 1.2s ease;
+    max-width: 800px;
+  }
+
+  .hero-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .shape {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.4;
+    filter: blur(60px);
+  }
+
+  .shape-1 {
+    top: -50px;
+    right: 5%;
+    width: 300px;
+    height: 300px;
+    background-color: #6366f1;
+    animation: float 15s ease-in-out infinite;
+  }
+
+  .shape-2 {
+    bottom: -100px;
+    left: 10%;
+    width: 350px;
+    height: 350px;
+    background-color: #8b5cf6;
+    animation: float 20s ease-in-out infinite reverse;
+  }
+
+  /* Profile Content */
+  .profile-content {
+    padding: 3rem 0 5rem;
+  }
+
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  @media (min-width: 1024px) {
+    .profile-grid {
+      grid-template-columns: 300px 1fr;
     }
   }
+
+  /* Profile Sidebar */
+  .profile-card,
+  .skills-card,
+  .content-card {
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  .profile-card {
+    text-align: center;
+  }
+
+  .profile-header {
+    padding: 2rem 1.5rem;
+    position: relative;
+    background-image: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
+  }
+
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 1.5rem;
+    border: 4px solid white;
+    box-shadow: var(--shadow-md);
+  }
+
+  .profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .profile-title {
+    color: var(--text-light);
+    margin-bottom: 1rem;
+  }
+
+  .profile-location {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+  }
+
+  .profile-location svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .profile-rating {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .stars {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .star {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #d1d5db;
+  }
+
+  .star.filled {
+    color: #f59e0b;
+  }
+
+  .rating-text {
+    color: var(--text-color);
+    font-weight: 500;
+  }
+
+  .profile-info {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .info-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .info-label {
+    color: var(--text-light);
+  }
+
+  .info-value {
+    font-weight: 600;
+  }
+
+  .profile-actions {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .action-button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .contact-btn {
+    background-image: var(--primary-gradient);
+    color: white;
+  }
+
+  .contact-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .download-btn {
+    background-color: #e5e7eb;
+    color: var(--text-color);
+  }
+
+  .download-btn:hover {
+    background-color: #d1d5db;
+  }
+
+  .skills-card {
+    padding: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    color: var(--text-color);
+  }
+
+  .skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .skill-tag {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #f3f4f6;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+  }
+
+  .skill-tag:hover {
+    background-image: var(--primary-gradient);
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  /* Main Content */
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    background-color: white;
+    padding: 0.5rem;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tab-button {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-light);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .tab-button:hover {
+    color: var(--primary-color);
+  }
+
+  .tab-button.active {
+    background-image: var(--primary-gradient);
+    color: white;
+  }
+
+  .tab-content {
+    display: block;
+  }
+
+  .tab-content.hidden {
+    display: none;
+  }
+
+  .content-card {
+    padding: 2rem;
+  }
+
+  .bio-text {
+    color: var(--text-color);
+    line-height: 1.75;
+  }
+
+  /* Portfolio */
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .portfolio-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .portfolio-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .portfolio-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .portfolio-image {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+  }
+
+  .portfolio-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+
+  .portfolio-item:hover .portfolio-image img {
+    transform: scale(1.1);
+  }
+
+  .portfolio-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    text-align: center;
+  }
+
+  .portfolio-item:hover .portfolio-overlay {
+    opacity: 1;
+  }
+
+  .portfolio-overlay h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .portfolio-overlay p {
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    opacity: 0.9;
+  }
+
+  .view-project {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: white;
+    border-radius: 9999px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: transform 0.3s ease;
+  }
+
+  .view-project:hover {
+    transform: scale(1.05);
+  }
+
+  /* Reviews */
+  .reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .review-item {
+    padding: 1.5rem;
+    border-radius: var(--border-radius-md);
+    background-color: #f9fafb;
+  }
+
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .reviewer-info h4 {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .review-date {
+    font-size: 0.875rem;
+    color: var(--text-light);
+  }
+
+  .review-comment {
+    color: var(--text-color);
+    line-height: 1.6;
+  }
+
+  /* Forms */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+
+  .form-group label svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--primary-color);
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--border-radius-sm);
+    background-color: white;
+    color: var(--text-color);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    outline: none;
+  }
+
+  .help-text {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-top: 0.5rem;
+  }
+
+  .submit-button {
+    display: inline-block;
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background-image: var(--primary-gradient);
+    border: none;
+    border-radius: var(--border-radius-md);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .rating-select {
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .rating-label {
+    cursor: pointer;
+  }
+
+  .rating-label input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .rating-label .star {
+    width: 2rem;
+    height: 2rem;
+    color: #d1d5db;
+    transition: color 0.3s ease;
+  }
+
+  .rating-label:hover .star,
+  .rating-label:hover ~ .rating-label .star,
+  .rating-label input:checked ~ .rating-label .star,
+  .rating-label input:checked + .star {
+    color: #f59e0b;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      transform: translateY(20px);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(20px, 20px);
+    }
+    100% {
+      transform: translate(0, 0);
+    }
+  }
+
+  [data-aos="fade-up"] {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  [data-aos="fade-up"].aos-animate {
+    opacity: 1;
+    transform: translateY(0);
+  }
 </style>
+
+<script>
+  // Tab switching functionality
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove active class from all buttons
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      
+      // Add active class to clicked button
+      button.classList.add('active');
+      
+      // Hide all tab content
+      tabContents.forEach(content => content.classList.add('hidden'));
+      
+      // Show selected tab content
+      const tabId = button.getAttribute('data-tab');
+      const selectedTab = document.getElementById(`${tabId}-tab`);
+      if (selectedTab) {
+        selectedTab.classList.remove('hidden');
+      }
+    });
+  });
+
+  // Simple AOS (Animate On Scroll) implementation
+  document.addEventListener('DOMContentLoaded', () => {
+    const animatedElements = document.querySelectorAll('[data-aos]');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('aos-animate');
+        }
+      });
+    }, {
+      threshold: 0.1
+    });
+    
+    animatedElements.forEach(element => {
+      observer.observe(element);
+      
+      // Apply delay if specified
+      const delay = element.getAttribute('data-aos-delay');
+      if (delay && element instanceof HTMLElement) {
+        element.style.transitionDelay = `${delay}ms`;
+      }
+    });
+  });
+
+  // Preview handling for portfolio uploads
+  document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('portfolio');
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        // Handle preview logic here if needed
+      });
+    }
+  });
+</script>

@@ -3,19 +3,30 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
 
-async function signUp(email, password, role) {
-  const { user, error } = await supabase.auth.signUp({
-    email, 
+async function signUp(email: string, password: string, role: string) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
     password,
-    data: { role }
   });
-  console.log(error || user);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  // Assuming you have a `profiles` table to store roles
+  if (data.user) {
+    await supabase.from('profiles').insert({
+      id: data.user.id,
+      role,
+    });
+  }
 }
 ---
 <form onsubmit="signUp(event.target.email.value, event.target.password.value, event.target.role.value)">
-  <input type="email" name="email" placeholder="Email" class="border p-2 rounded mb-2" />
-  <input type="password" name="password" placeholder="Password" class="border p-2 rounded mb-2" />
-  <select name="role" class="border p-2 rounded mb-2">
+  <input type="email" name="email" placeholder="Email" class="border p-2 rounded mb-2" required />
+  <input type="password" name="password" placeholder="Password" class="border p-2 rounded mb-2" required />
+  <select name="role" class="border p-2 rounded mb-2" required>
     <option value="client">Client</option>
     <option value="designer">Designer</option>
     <option value="developer">Developer</option>

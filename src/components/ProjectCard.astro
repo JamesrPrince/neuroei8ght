@@ -6,16 +6,12 @@ interface Props {
   clientName: string;
 }
 
-const ProjectCard = ({ title, description, budget, clientName }: Props) => {
-  return (
-    <div class="border rounded p-4 shadow-md">
-      <h2 class="text-xl font-bold mb-2">{title}</h2>
-      <p class="text-gray-700 mb-2">{description}</p>
-      <p class="text-green-600 font-semibold">Budget: ${budget}</p>
-      <p class="text-sm text-gray-500">Posted by: {clientName}</p>
-    </div>
-  );
-};
-
-export default ProjectCard;
+const { title, description, budget, clientName } = Astro.props;
 ---
+
+<div class="border rounded p-4 shadow-md">
+  <h2 class="text-xl font-bold mb-2">{title}</h2>
+  <p class="text-gray-700 mb-2">{description}</p>
+  <p class="text-green-600 font-semibold">Budget: ${budget}</p>
+  <p class="text-sm text-gray-500">Posted by: {clientName}</p>
+</div>

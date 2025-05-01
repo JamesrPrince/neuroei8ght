@@ -1,25 +1,499 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import AuthForm from '../components/AuthForm.astro';
+import ProjectCard from '../components/ProjectCard.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const featuredProjects = [
+  {
+    title: 'E-commerce Website',
+    description: 'A modern e-commerce platform with payment integration.',
+    budget: 5000,
+    clientName: 'John Doe',
+  },
+  {
+    title: 'Portfolio Website',
+    description: 'A sleek portfolio website for showcasing work.',
+    budget: 2000,
+    clientName: 'Jane Smith',
+  },
+  {
+    title: 'Mobile App',
+    description: 'A cross-platform app with real-time features.',
+    budget: 8000,
+    clientName: 'Tech Innovations',
+  },
+];
 ---
 
-<style>
-  @media (max-width: 768px) {
-    h1 {
-      font-size: 1.5rem;
-      text-align: center;
-    }
+<Layout>
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="animate-title">Welcome to the Designer & Developer Platform</h1>
+      <p class="animate-subtitle">Connect, collaborate, and create amazing projects.</p>
+      <div class="button-container">
+        <a href="#features" class="primary-button">Explore Features</a>
+        <a href="#get-started" class="secondary-button">Get Started</a>
+      </div>
+    </div>
+    <div class="hero-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+  </section>
 
-    p {
-      font-size: 1rem;
-      padding: 0 1rem;
+  <section id="features" class="features-section">
+    <div class="container">
+      <h2 class="section-title">Our Features</h2>
+      <div class="features-grid">
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3>Post Projects</h3>
+          <p>Clients can post projects and find the best talent for their needs.</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="150">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+            </svg>
+          </div>
+          <h3>Bid on Projects</h3>
+          <p>Designers and developers can bid on projects and showcase their skills.</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="feature-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3>Secure Payments</h3>
+          <p>Seamless and secure payment integration for hassle-free transactions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="featured-projects" class="projects-section">
+    <div class="container">
+      <h2 class="section-title">Featured Projects</h2>
+      <div class="projects-grid">
+        {featuredProjects.map((project, index) => (
+          <div class="project-wrapper" data-aos="fade-up" data-aos-delay={index * 100}>
+            <ProjectCard {...project} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="get-started" class="cta-section">
+    <div class="container">
+      <h2 class="section-title">Get Started Today</h2>
+      <p class="cta-description">Sign up now and bring your ideas to life.</p>
+      <div class="auth-form-container">
+        <AuthForm />
+      </div>
+    </div>
+    <div class="cta-shapes">
+      <div class="cta-shape cta-shape-1"></div>
+      <div class="cta-shape cta-shape-2"></div>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
+    --accent-gradient: linear-gradient(135deg, #14b8a6 0%, #0ea5e9 50%, #6366f1 100%);
+    --text-gradient: linear-gradient(90deg, #3b82f6, #8b5cf6, #d946ef);
+    
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --accent-color: #14b8a6;
+    --text-color: #1e293b;
+    --text-light: #64748b;
+    --bg-light: #f8fafc;
+    --bg-lighter: #ffffff;
+    --bg-dark: #1e293b;
+    
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    
+    --border-radius-sm: 0.375rem;
+    --border-radius-md: 0.75rem;
+    --border-radius-lg: 1.5rem;
+    
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--text-color);
+    line-height: 1.6;
+    background-color: var(--bg-light);
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  /* Hero Section */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    padding: 5rem 0;
+    background-image: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .animate-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    background-image: var(--text-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: fade-in 1.5s ease, slide-up 1.5s ease;
+  }
+
+  .animate-subtitle {
+    font-size: 1.5rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    animation: fade-in 1.5s ease 0.3s, slide-up 1.5s ease 0.3s both;
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    animation: fade-in 1.5s ease 0.6s, slide-up 1.5s ease 0.6s both;
+  }
+
+  .primary-button {
+    background-image: var(--primary-gradient);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: var(--shadow-md);
+  }
+
+  .primary-button:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .secondary-button {
+    background-color: white;
+    color: var(--primary-color);
+    padding: 1rem 2rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .secondary-button:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Hero Shapes */
+  .hero-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .shape {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.4;
+    filter: blur(60px);
+  }
+
+  .shape-1 {
+    top: -100px;
+    right: 10%;
+    width: 400px;
+    height: 400px;
+    background-color: #6366f1;
+    animation: float 15s ease-in-out infinite;
+  }
+
+  .shape-2 {
+    bottom: -150px;
+    left: 5%;
+    width: 500px;
+    height: 500px;
+    background-color: #8b5cf6;
+    animation: float 20s ease-in-out infinite reverse;
+  }
+
+  .shape-3 {
+    top: 40%;
+    left: 50%;
+    width: 300px;
+    height: 300px;
+    background-color: #ec4899;
+    animation: float 18s ease-in-out 1s infinite;
+  }
+
+  /* Features Section */
+  .features-section {
+    padding: 8rem 0;
+    background-color: var(--bg-light);
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 4rem;
+    background-image: var(--text-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 2rem;
+  }
+
+  @media (min-width: 768px) {
+    .features-grid {
+      grid-template-columns: repeat(3, 1fr);
     }
+  }
+
+  .feature-card {
+    background: var(--bg-lighter);
+    border-radius: var(--border-radius-md);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+    text-align: center;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    background-image: var(--primary-gradient);
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+    color: white;
+  }
+
+  .feature-card h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .feature-card p {
+    color: var(--text-light);
+  }
+
+  /* Projects Section */
+  .projects-section {
+    padding: 8rem 0;
+    background-color: white;
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 2rem;
+  }
+
+  @media (min-width: 768px) {
+    .projects-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .projects-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .project-wrapper {
+    height: 100%;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    position: relative;
+    padding: 8rem 0;
+    background-image: var(--secondary-gradient);
+    color: white;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .cta-description {
+    font-size: 1.5rem;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+  }
+
+  .auth-form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: var(--border-radius-md);
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .cta-shapes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .cta-shape {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.2;
+    filter: blur(60px);
+  }
+
+  .cta-shape-1 {
+    top: -10%;
+    right: -5%;
+    width: 500px;
+    height: 500px;
+    background-color: #6366f1;
+    animation: float 15s ease-in-out infinite reverse;
+  }
+
+  .cta-shape-2 {
+    bottom: -15%;
+    left: -5%;
+    width: 600px;
+    height: 600px;
+    background-color: #ec4899;
+    animation: float 20s ease-in-out infinite;
+  }
+  
+  /* Animations */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      transform: translateY(30px);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0% {
+      transform: translate(0, 0);
+    }
+    50% {
+      transform: translate(20px, 20px);
+    }
+    100% {
+      transform: translate(0, 0);
+    }
+  }
+
+  [data-aos="fade-up"] {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+
+  [data-aos="fade-up"].aos-animate {
+    opacity: 1;
+    transform: translateY(0);
   }
 </style>
 
-<Layout>
-	<AuthForm />
-</Layout>
+<script>
+  // Simple AOS (Animate On Scroll) implementation
+  document.addEventListener('DOMContentLoaded', () => {
+    const animatedElements = document.querySelectorAll('[data-aos]');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('aos-animate');
+        }
+      });
+    }, {
+      threshold: 0.1
+    });
+    
+    animatedElements.forEach(element => {
+      observer.observe(element);
+      
+      // Apply delay if specified
+      const delay = element.getAttribute('data-aos-delay');
+      if (delay) {
+        element.style.transitionDelay = `${delay}ms`;
+      }
+    });
+  });
+</script>
