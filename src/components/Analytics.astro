@@ -2,6 +2,83 @@
 // Analytics.astro - Component for visualizing user and platform metrics
 const { userType = 'freelancer', userId } = Astro.props;
 
+// Define interfaces for different user data types
+interface FreelancerData {
+  earnings: {
+    total: number;
+    month: number;
+    pending: number;
+  };
+  projects: {
+    completed: number;
+    active: number;
+    proposals: number;
+  };
+  skills: {
+    name: string;
+    projects: number;
+    rating: number;
+  }[];
+  timeTracked: {
+    total: number;
+    thisWeek: number;
+    thisMonth: number;
+  };
+  ratings: {
+    average: number;
+    count: number;
+  };
+}
+
+interface ClientData {
+  projects: {
+    posted: number;
+    active: number;
+    completed: number;
+  };
+  spending: {
+    total: number;
+    month: number;
+    inEscrow: number;
+  };
+  freelancers: {
+    hired: number;
+    favorite: number;
+  };
+  projectSuccess: {
+    onTime: number;
+    onBudget: number;
+    satisfaction: number;
+  };
+}
+
+interface PlatformData {
+  users: {
+    total: number;
+    freelancers: number;
+    clients: number;
+    newThisMonth: number;
+  };
+  projects: {
+    total: number;
+    active: number;
+    completed: number;
+    newThisMonth: number;
+  };
+  transactions: {
+    total: number;
+    month: number;
+    fees: number;
+  };
+  categories: {
+    name: string;
+    projects: number;
+    value: number;
+  }[];
+}
+
+type UserData = FreelancerData | ClientData | PlatformData;
+
 // Determine what data to display based on user type
 const isFreelancer = userType === 'freelancer';
 const isClient = userType === 'client';
@@ -10,7 +87,7 @@ const isAdmin = userType === 'admin';
 // In a real implementation, fetch data from Supabase
 // This example shows how we'd structure the data fetching
 // For now we're using hardcoded data for the demo, but the structure is ready for API integration
-async function fetchAnalyticsData(userType, userId) {
+async function fetchAnalyticsData(userType: string, userId: string): Promise<UserData> {
   // In production, this would be a real API call
   // const { data, error } = await supabase
   //   .from(userType === 'freelancer' ? 'freelancer_analytics' : 
@@ -23,7 +100,7 @@ async function fetchAnalyticsData(userType, userId) {
   // return data;
 
   // For demo purposes we're using hardcoded data
-  const freelancerData = {
+  const freelancerData: FreelancerData = {
     earnings: {
       total: 8750,
       month: 1250,
@@ -51,7 +128,7 @@ async function fetchAnalyticsData(userType, userId) {
     }
   };
 
-  const clientData = {
+  const clientData: ClientData = {
     projects: {
       posted: 15,
       active: 4,
@@ -73,7 +150,7 @@ async function fetchAnalyticsData(userType, userId) {
     }
   };
 
-  const platformData = {
+  const platformData: PlatformData = {
     users: {
       total: 5420,
       freelancers: 3850,
@@ -392,8 +469,16 @@ try {
 </style>
 
 <script>
-  // Import Chart.js library
+  // Import Chart.js library via CDN
+  // @ts-ignore - External CDN import
   import 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js';
+  
+  // Make Chart available as a global
+  declare global {
+    interface Window {
+      Chart: any;
+    }
+  }
   
   document.addEventListener('DOMContentLoaded', function() {
     // Get the page's user type from data attribute
@@ -414,7 +499,8 @@ try {
     // Earnings/Spending chart
     const earningsChart = document.getElementById('earnings-chart');
     if (earningsChart) {
-      new Chart(earningsChart, {
+      // @ts-ignore - Chart is loaded from CDN
+      new window.Chart(earningsChart, {
         type: 'line',
         data: {
           labels: last6Months,
@@ -450,7 +536,7 @@ try {
             y: {
               beginAtZero: true,
               ticks: {
-                callback: function(value) {
+                callback: function(value: any) {
                   return '$' + value;
                 }
               }
@@ -465,7 +551,8 @@ try {
     if (projectsChart) {
       if (isFreelancer) {
         // For freelancer: Skills breakdown
-        new Chart(projectsChart, {
+        // @ts-ignore - Chart is loaded from CDN
+        new window.Chart(projectsChart, {
           type: 'polarArea',
           data: {
             labels: ['JavaScript', 'React', 'Node.js', 'UI/UX'],
@@ -486,7 +573,8 @@ try {
         });
       } else if (isClient) {
         // For client: Project status
-        new Chart(projectsChart, {
+        // @ts-ignore - Chart is loaded from CDN
+        new window.Chart(projectsChart, {
           type: 'doughnut',
           data: {
             labels: ['Completed', 'Active', 'Planning'],
@@ -506,7 +594,8 @@ try {
         });
       } else {
         // For admin: Categories breakdown
-        new Chart(projectsChart, {
+        // @ts-ignore - Chart is loaded from CDN
+        new window.Chart(projectsChart, {
           type: 'bar',
           data: {
             labels: ['Web Dev', 'Mobile Dev', 'Design', 'Content', 'Marketing'],
@@ -534,15 +623,15 @@ try {
     }
     
     // Time range selector functionality
-    const timeRangeSelector = document.getElementById('time-range');
+    const timeRangeSelector = document.getElementById('time-range') as HTMLSelectElement;
     if (timeRangeSelector) {
       timeRangeSelector.addEventListener('change', function() {
         // In a real app, this would trigger data refresh with the new time range
-        console.log('Time range changed to:', this.value);
+        console.log('Time range changed to:', timeRangeSelector.value);
         // Mock loading state
         const dashboard = document.querySelector('.analytics-dashboard');
         if (dashboard) {
-          const contentArea = dashboard.querySelector('.grid');
+          const contentArea = dashboard.querySelector('.grid') as HTMLElement;
           if (contentArea) {
             contentArea.style.opacity = '0.5';
             setTimeout(() => {
@@ -586,6 +675,8 @@ try {
   }
 
   async function initializeAnalytics() {
+    if (!loadingSpinner || !analyticsContent) return;
+    
     // Show loading spinner
     loadingSpinner.classList.remove('hidden');
     analyticsContent.classList.add('hidden');
@@ -598,8 +689,10 @@ try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Hide loading spinner and show content
-      loadingSpinner.classList.add('hidden');
-      analyticsContent.classList.remove('hidden');
+      if (loadingSpinner && analyticsContent) {
+        loadingSpinner.classList.add('hidden');
+        analyticsContent.classList.remove('hidden');
+      }
       
       // Initialize charts using Chart.js
       initializeCharts();
@@ -607,14 +700,16 @@ try {
       console.error('Error initializing analytics:', error);
       
       // Show error state
-      loadingSpinner.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
-        <p class="text-red-500">Failed to load analytics data. Please try again later.</p>
-      `;
+      if (loadingSpinner) {
+        loadingSpinner.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <p class="text-red-500">Failed to load analytics data. Please try again later.</p>
+        `;
+      }
     }
   }
 

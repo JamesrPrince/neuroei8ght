@@ -1,11 +1,19 @@
 ---
 // Notifications.astro - A comprehensive notification system for the platform
-import { createClient } from '@supabase/supabase-js';
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 
-// Get Supabase credentials from environment variables
-const supabaseUrl = import.meta.env.SUPABASE_URL;
-const supabaseKey = import.meta.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Define notification interfaces for TypeScript
+interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  content: string;
+  read: boolean;
+  created_at: string;
+  project_id?: string;
+  conversation_id?: string;
+}
 
 // Get user ID from props or session
 const { userId } = Astro.props;
@@ -40,37 +48,43 @@ const notificationIcons = {
   <div class="relative">
     <button
       id="notifications-toggle"
-      class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+      class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors"
       aria-label="Notifications"
     >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-neutral-700 dark:text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
       </svg>
-      <span id="notification-badge" class="absolute top-0 right-0 h-5 w-5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold"></span>
+      <span id="notification-badge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white opacity-0 transition-opacity duration-200">0</span>
     </button>
     
-    <!-- Notification Dropdown -->
-    <div id="notifications-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50">
-      <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <div class="flex justify-between items-center">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
-          <div>
-            <button id="mark-all-read" class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
-              Mark all as read
-            </button>
-          </div>
+    <!-- Notifications Dropdown -->
+    <div
+      id="notifications-dropdown"
+      class="hidden absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-white dark:bg-neutral-800 rounded-xl shadow-soft border border-neutral-200 dark:border-neutral-700 z-50"
+    >
+      <div class="p-4 border-b border-neutral-200 dark:border-neutral-700 flex justify-between items-center sticky top-0 bg-white dark:bg-neutral-800 z-10">
+        <h3 class="font-medium text-neutral-900 dark:text-neutral-100">Notifications</h3>
+        <button 
+          id="mark-all-read" 
+          class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium transition-colors"
+        >
+          Mark all as read
+        </button>
+      </div>
+      
+      <!-- Notifications List -->
+      <div id="notifications-list" class="divide-y divide-neutral-200 dark:divide-neutral-700">
+        <div class="flex items-center justify-center p-6 text-neutral-500 dark:text-neutral-400">
+          <span>Loading notifications...</span>
         </div>
       </div>
       
-      <div id="notifications-list" class="max-h-96 overflow-y-auto">
-        <!-- Notifications will be populated here -->
-        <div class="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">
-          Loading notifications...
-        </div>
-      </div>
-      
-      <div class="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-center">
-        <a href="/notifications" class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+      <!-- View All Link -->
+      <div class="p-2 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-center sticky bottom-0">
+        <a 
+          href="/notifications" 
+          class="block w-full py-2 px-3 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 font-medium transition-colors"
+        >
           View all notifications
         </a>
       </div>
@@ -82,410 +96,368 @@ const notificationIcons = {
 <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
 <script>
+  // Import Supabase client from our centralized module
+  import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
+
+  // Define TypeScript interfaces
+  interface NotificationType {
+    id: string;
+    user_id: string;
+    type: string;
+    title: string;
+    content: string;
+    read: boolean;
+    created_at: string;
+    project_id?: string;
+    conversation_id?: string;
+  }
+
+  interface IconMap {
+    [key: string]: string;
+  }
+
   // Elements
-  const notificationsToggle = document.getElementById('notifications-toggle');
-  const notificationsDropdown = document.getElementById('notifications-dropdown');
-  const notificationsList = document.getElementById('notifications-list');
-  const notificationBadge = document.getElementById('notification-badge');
-  const markAllReadBtn = document.getElementById('mark-all-read');
-  const toastContainer = document.getElementById('toast-container');
+  const notificationsToggle = document.getElementById('notifications-toggle') as HTMLButtonElement;
+  const notificationsDropdown = document.getElementById('notifications-dropdown') as HTMLDivElement;
+  const notificationsList = document.getElementById('notifications-list') as HTMLDivElement;
+  const notificationBadge = document.getElementById('notification-badge') as HTMLSpanElement;
+  const markAllReadBtn = document.getElementById('mark-all-read') as HTMLButtonElement;
+  const toastContainer = document.getElementById('toast-container') as HTMLDivElement;
   
   // Notification state
-  let notifications = [];
+  let notifications: NotificationType[] = [];
   let unreadCount = 0;
   let userId = '${userId || ""}';
   
   // Notification icons (SVG paths for each type)
-  const icons = {
-    'project-awarded': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />',
-    'new-message': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />',
-    'payment-received': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />',
-    'milestone-completed': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />',
-    'review-received': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />',
-    'project-invitation': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />',
-    'deadline-reminder': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />',
-    'system-announcement': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
+  const icons: IconMap = {
+    'project-awarded': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+    </svg>`,
+    'new-message': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+    </svg>`,
+    'payment-received': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+    </svg>`,
+    'milestone-completed': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>`,
+    'review-received': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+    </svg>`,
+    'project-invitation': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+    </svg>`,
+    'deadline-reminder': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>`,
+    'system-announcement': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>`
   };
   
   // Initialize
   document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     fetchNotifications();
-    initializeRealtimeUpdates();
+    
+    // Set up real-time subscription
+    if (isSupabaseConfigured() && userId) {
+      setupRealtimeSubscription();
+    }
   });
   
   // Event listeners
-  function setupEventListeners() {
+  function setupEventListeners(): void {
     // Toggle notifications dropdown
-    notificationsToggle.addEventListener('click', () => {
-      notificationsDropdown.classList.toggle('hidden');
-      
-      // If showing notifications, mark as seen
-      if (!notificationsDropdown.classList.contains('hidden')) {
-        markNotificationsAsSeen();
-      }
-    });
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!notificationsToggle.contains(e.target) && 
-          !notificationsDropdown.contains(e.target)) {
-        notificationsDropdown.classList.add('hidden');
-      }
-    });
-    
-    // Mark all as read
-    markAllReadBtn.addEventListener('click', markAllAsRead);
-  }
-  
-  // Fetch notifications from the server
-  async function fetchNotifications() {
-    if (!userId) return;
-    
-    try {
-      const response = await fetch('/api/notifications', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token')}`
-        }
+    if (notificationsToggle && notificationsDropdown) {
+      notificationsToggle.addEventListener('click', () => {
+        notificationsDropdown.classList.toggle('hidden');
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        notifications = data.notifications || [];
-        renderNotifications();
-        updateUnreadCount();
-      } else {
-        console.error('Failed to fetch notifications');
-      }
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      notificationsList.innerHTML = '<div class="px-4 py-3 text-center text-sm text-red-500">Failed to load notifications</div>';
-    }
-  }
-  
-  // Render notifications in the dropdown
-  function renderNotifications() {
-    if (notifications.length === 0) {
-      notificationsList.innerHTML = '<div class="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">No notifications</div>';
-      return;
-    }
-    
-    notificationsList.innerHTML = '';
-    notifications.slice(0, 5).forEach(notification => {
-      const notificationElement = createNotificationElement(notification);
-      notificationsList.appendChild(notificationElement);
-    });
-  }
-  
-  // Create a single notification element
-  function createNotificationElement(notification) {
-    const element = document.createElement('div');
-    element.className = `px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 ${notification.read ? '' : 'bg-purple-50 dark:bg-purple-900 dark:bg-opacity-20'}`;
-    
-    // Get icon for notification type
-    const iconSvg = icons[notification.type] || icons['system-announcement'];
-    
-    element.innerHTML = `
-      <div class="flex items-start">
-        <div class="flex-shrink-0 mr-3">
-          <div class="w-8 h-8 rounded-full flex items-center justify-center ${notification.read ? 'bg-gray-200 dark:bg-gray-700' : 'bg-purple-100 dark:bg-purple-800'}">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${notification.read ? 'text-gray-500 dark:text-gray-400' : 'text-purple-600 dark:text-purple-300'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              ${iconSvg}
-            </svg>
-          </div>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium ${notification.read ? 'text-gray-900 dark:text-white' : 'text-purple-900 dark:text-purple-100'}">
-            ${notification.title}
-          </p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">
-            ${notification.content}
-          </p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            ${formatTimeAgo(notification.created_at)}
-          </p>
-        </div>
-        <div class="ml-3">
-          <button class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300" data-notification-id="${notification.id}" aria-label="Mark as read">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    `;
-    
-    // Add click event for the whole notification
-    element.addEventListener('click', (e) => {
-      // If the click was on the close button, mark as read
-      if (e.target.closest('[data-notification-id]')) {
-        e.stopPropagation();
-        const notificationId = e.target.closest('[data-notification-id]').getAttribute('data-notification-id');
-        markAsRead(notificationId);
-      } else {
-        // Otherwise navigate to the notification target
-        handleNotificationClick(notification);
-      }
-    });
-    
-    return element;
-  }
-  
-  // Update the unread count badge
-  function updateUnreadCount() {
-    unreadCount = notifications.filter(n => !n.read).length;
-    
-    if (unreadCount > 0) {
-      notificationBadge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-      notificationBadge.classList.remove('hidden');
-    } else {
-      notificationBadge.classList.add('hidden');
-    }
-  }
-  
-  // Mark a notification as read
-  async function markAsRead(notificationId) {
-    try {
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token')}`
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement;
+        if (!notificationsToggle.contains(target) && !notificationsDropdown.contains(target)) {
+          notificationsDropdown.classList.add('hidden');
         }
       });
-      
-      if (response.ok) {
-        // Update local state
-        notifications = notifications.map(n => 
-          n.id === notificationId ? { ...n, read: true } : n
-        );
-        renderNotifications();
-        updateUnreadCount();
-      }
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
-  }
-  
-  // Mark all notifications as read
-  async function markAllAsRead() {
-    try {
-      const response = await fetch('/api/notifications/mark-all-read', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token')}`
+    
+    // Mark all notifications as read
+    if (markAllReadBtn) {
+      markAllReadBtn.addEventListener('click', async () => {
+        if (!isSupabaseConfigured() || !userId) return;
+        
+        try {
+          await supabase.from('notifications').update({ read: true }).eq('user_id', userId);
+          notifications.forEach(n => n.read = true);
+          renderNotifications();
+          updateUnreadCount();
+        } catch (error) {
+          console.error('Error marking all notifications as read:', error);
         }
       });
-      
-      if (response.ok) {
-        // Update local state
-        notifications = notifications.map(n => ({ ...n, read: true }));
-        renderNotifications();
-        updateUnreadCount();
-      }
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
     }
   }
   
-  // Mark notifications as seen (viewed but not necessarily read)
-  async function markNotificationsAsSeen() {
-    if (unreadCount === 0) return;
-    
-    try {
-      await fetch('/api/notifications/mark-seen', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token')}`
-        }
-      });
-    } catch (error) {
-      console.error('Error marking notifications as seen:', error);
-    }
-  }
-  
-  // Handle notification click (navigate to relevant page)
-  function handleNotificationClick(notification) {
-    // Different actions based on notification type
-    switch (notification.type) {
-      case 'project-awarded':
-      case 'milestone-completed':
-        window.location.href = `/projects/${notification.project_id}`;
-        break;
-      case 'new-message':
-        window.location.href = `/chat/${notification.conversation_id}`;
-        break;
-      case 'payment-received':
-        window.location.href = `/profile/earnings`;
-        break;
-      case 'review-received':
-        window.location.href = `/profile/reviews`;
-        break;
-      case 'project-invitation':
-        window.location.href = `/projects/invitations`;
-        break;
-      case 'deadline-reminder':
-        window.location.href = `/projects/${notification.project_id}#milestones`;
-        break;
-      case 'system-announcement':
-        window.location.href = '/announcements';
-        break;
-      default:
-        window.location.href = '/notifications';
-    }
-    
-    // Mark as read when clicked
-    markAsRead(notification.id);
-  }
-  
-  // Initialize Supabase realtime subscription for new notifications
-  function initializeRealtimeUpdates() {
-    if (!userId) return;
-    
-    // Use Supabase realtime subscriptions in production
-    const channel = supabase.channel('public:notifications');
-
-    channel
+  // Set up real-time subscription for new notifications
+  function setupRealtimeSubscription(): void {
+    supabase
+      .channel('public:notifications')
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
         table: 'notifications',
         filter: `user_id=eq.${userId}` 
       }, (payload) => {
-        handleNewNotification(payload.new);
+        const newNotification = payload.new as NotificationType;
+        notifications.unshift(newNotification);
+        unreadCount++;
+        updateUnreadCount();
+        renderNotifications();
+        showToast(newNotification);
       })
       .subscribe();
   }
   
-  // Handle incoming new notification
-  function handleNewNotification(notification) {
-    // Add to our list
-    notifications.unshift(notification);
+  // Fetch notifications from the server
+  async function fetchNotifications(): Promise<void> {
+    if (!isSupabaseConfigured() || !userId) {
+      notificationsList.innerHTML = `
+        <div class="p-6 text-center text-neutral-500 dark:text-neutral-400">
+          <p>Please sign in to view your notifications</p>
+        </div>
+      `;
+      return;
+    }
     
-    // Update UI
-    renderNotifications();
-    updateUnreadCount();
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      
+      notifications = data || [];
+      unreadCount = notifications.filter(n => !n.read).length;
+      
+      renderNotifications();
+      updateUnreadCount();
+      
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      notificationsList.innerHTML = `
+        <div class="p-6 text-center text-neutral-500 dark:text-neutral-400">
+          <p>Unable to load notifications</p>
+        </div>
+      `;
+    }
+  }
+  
+  // Render notifications in the dropdown
+  function renderNotifications(): void {
+    if (!notificationsList) return;
     
-    // Show toast notification
-    showToast(notification);
+    if (notifications.length === 0) {
+      notificationsList.innerHTML = `
+        <div class="p-6 text-center text-neutral-500 dark:text-neutral-400">
+          <p>No notifications yet</p>
+        </div>
+      `;
+      return;
+    }
+    
+    notificationsList.innerHTML = notifications
+      .map(notification => createNotificationElement(notification).outerHTML)
+      .join('');
+    
+    // Add click event to all notifications
+    document.querySelectorAll('[data-notification-id]').forEach(element => {
+      element.addEventListener('click', async (e) => {
+        const notificationId = (element as HTMLDivElement).dataset.notificationId;
+        if (notificationId) {
+          await markAsRead(notificationId);
+          
+          // Navigate to the relevant page based on notification type
+          const notification = notifications.find(n => n.id === notificationId);
+          if (notification) {
+            if (notification.project_id) {
+              window.location.href = `/projects/${notification.project_id}`;
+            } else if (notification.conversation_id) {
+              window.location.href = `/messages/${notification.conversation_id}`;
+            }
+            // Add other navigation logic for different notification types
+          }
+        }
+      });
+    });
+  }
+  
+  // Create a single notification element
+  function createNotificationElement(notification: NotificationType): HTMLDivElement {
+    const element = document.createElement('div');
+    element.className = `p-4 hover:bg-neutral-50 dark:hover:bg-neutral-700 cursor-pointer transition-colors ${
+      !notification.read ? 'bg-primary-50 dark:bg-primary-900/20' : ''
+    }`;
+    element.dataset.notificationId = notification.id;
+    
+    const date = new Date(notification.created_at);
+    const formattedDate = new Intl.DateTimeFormat('en', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+    
+    const iconHtml = icons[notification.type] || icons['system-announcement'];
+    
+    element.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 rounded-full p-2 ${
+          !notification.read 
+            ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400' 
+            : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
+        }">
+          ${iconHtml}
+        </div>
+        <div class="flex-grow min-w-0">
+          <h4 class="font-medium text-neutral-900 dark:text-neutral-100 mb-1">${notification.title}</h4>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">${notification.content}</p>
+          <p class="text-xs text-neutral-500 dark:text-neutral-500 mt-1">${formattedDate}</p>
+        </div>
+        ${!notification.read ? `
+          <span class="flex-shrink-0 w-2 h-2 rounded-full bg-primary-500 dark:bg-primary-400 mt-2"></span>
+        ` : ''}
+      </div>
+    `;
+    
+    return element;
+  }
+  
+  // Update the unread count badge
+  function updateUnreadCount(): void {
+    if (!notificationBadge) return;
+    
+    if (unreadCount > 0) {
+      notificationBadge.textContent = unreadCount > 9 ? '9+' : `${unreadCount}`;
+      notificationBadge.classList.remove('opacity-0');
+    } else {
+      notificationBadge.classList.add('opacity-0');
+    }
+  }
+  
+  // Mark a notification as read
+  async function markAsRead(notificationId: string): Promise<void> {
+    if (!isSupabaseConfigured() || !userId) return;
+    
+    const notification = notifications.find(n => n.id === notificationId);
+    if (!notification || notification.read) return;
+    
+    try {
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', notificationId);
+      
+      notification.read = true;
+      unreadCount = Math.max(0, unreadCount - 1);
+      
+      renderNotifications();
+      updateUnreadCount();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   }
   
   // Show toast notification for new notifications
-  function showToast(notification) {
-    const toast = document.createElement('div');
-    toast.className = 'flex items-center p-4 mb-4 w-full max-w-xs text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 transition-opacity duration-300 opacity-0';
+  function showToast(notification: NotificationType): void {
+    if (!toastContainer) return;
     
-    // Get icon for notification type
-    const iconSvg = icons[notification.type] || icons['system-announcement'];
+    const toast = document.createElement('div');
+    toast.className = 'bg-white dark:bg-neutral-800 rounded-lg shadow-soft border border-neutral-200 dark:border-neutral-700 p-4 transform translate-y-4 opacity-0 transition-all duration-300 max-w-md';
+    
+    const iconHtml = icons[notification.type] || icons['system-announcement'];
     
     toast.innerHTML = `
-      <div class="inline-flex flex-shrink-0 justify-center items-center w-8 h-8 text-purple-500 bg-purple-100 rounded-lg dark:bg-purple-800 dark:text-purple-200">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          ${iconSvg}
-        </svg>
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 rounded-full p-2 bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
+          ${iconHtml}
+        </div>
+        <div class="flex-grow min-w-0">
+          <h4 class="font-medium text-neutral-900 dark:text-neutral-100 mb-0.5">${notification.title}</h4>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-1">${notification.content}</p>
+        </div>
+        <button class="flex-shrink-0 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors" aria-label="Close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
       </div>
-      <div class="ml-3 text-sm font-normal">
-        <div class="font-semibold text-gray-900 dark:text-white">${notification.title}</div>
-        <div>${notification.content}</div>
-      </div>
-      <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" aria-label="Close">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-      </button>
     `;
     
-    // Add event listener to close button
-    toast.querySelector('button').addEventListener('click', () => {
-      toast.classList.remove('opacity-100');
-      toast.classList.add('opacity-0');
-      setTimeout(() => {
-        toast.remove();
-      }, 300);
-    });
-    
-    // Add event listener to navigate on click
-    toast.addEventListener('click', (e) => {
-      if (!e.target.closest('button')) {
-        handleNotificationClick(notification);
-      }
-    });
-    
-    // Add to container
     toastContainer.appendChild(toast);
     
     // Animate in
     setTimeout(() => {
-      toast.classList.remove('opacity-0');
-      toast.classList.add('opacity-100');
+      toast.classList.remove('translate-y-4', 'opacity-0');
     }, 10);
+    
+    // Add click event to close button
+    const closeButton = toast.querySelector('button');
+    closeButton?.addEventListener('click', () => {
+      removeToast(toast);
+    });
     
     // Auto-remove after 5 seconds
     setTimeout(() => {
-      if (toast.parentNode) {
-        toast.classList.remove('opacity-100');
-        toast.classList.add('opacity-0');
-        setTimeout(() => {
-          toast.remove();
-        }, 300);
-      }
+      removeToast(toast);
     }, 5000);
   }
   
-  // Format timestamp to relative time (e.g. "5 minutes ago")
-  function formatTimeAgo(timestamp) {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const seconds = Math.floor((now - date) / 1000);
-    
-    let interval = Math.floor(seconds / 31536000);
-    if (interval >= 1) {
-      return interval === 1 ? '1 year ago' : `${interval} years ago`;
-    }
-    
-    interval = Math.floor(seconds / 2592000);
-    if (interval >= 1) {
-      return interval === 1 ? '1 month ago' : `${interval} months ago`;
-    }
-    
-    interval = Math.floor(seconds / 86400);
-    if (interval >= 1) {
-      return interval === 1 ? '1 day ago' : `${interval} days ago`;
-    }
-    
-    interval = Math.floor(seconds / 3600);
-    if (interval >= 1) {
-      return interval === 1 ? '1 hour ago' : `${interval} hours ago`;
-    }
-    
-    interval = Math.floor(seconds / 60);
-    if (interval >= 1) {
-      return interval === 1 ? '1 minute ago' : `${interval} minutes ago`;
-    }
-    
-    return seconds < 10 ? 'just now' : `${seconds} seconds ago`;
+  // Remove toast with animation
+  function removeToast(toast: HTMLDivElement): void {
+    toast.classList.add('translate-y-4', 'opacity-0');
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
   }
 </script>
 
 <style>
-  /* Animation for new notifications */
-  @keyframes pulse {
-    0%, 100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
-  }
-
-  #notification-badge:not(.hidden) {
-    animation: pulse 2s infinite;
+  /* Custom scrollbar for notifications */
+  #notifications-dropdown {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
   }
   
-  /* Toast notification animations */
-  #toast-container > div {
-    transition: opacity 0.3s ease-in-out;
+  #notifications-dropdown::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  #notifications-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  #notifications-dropdown::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 20px;
+  }
+  
+  /* Animation for dropdown */
+  #notifications-dropdown {
+    transform: scale(0.95) translateY(-10px);
+    opacity: 0;
+    transform-origin: top right;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  
+  #notifications-dropdown:not(.hidden) {
+    transform: scale(1) translateY(0);
+    opacity: 1;
   }
 </style>

@@ -5,460 +5,422 @@ import ProjectCard from '../components/ProjectCard.astro';
 
 const featuredProjects = [
   {
+    id: "project-1",
     title: 'E-commerce Website',
-    description: 'A modern e-commerce platform with payment integration.',
+    description: 'A modern e-commerce platform with payment integration and responsive design.',
     budget: 5000,
     clientName: 'John Doe',
+    category: 'Web Development',
+    skills: ['React', 'Node.js', 'Stripe', 'MongoDB'],
+    deadline: '2025-06-15'
   },
   {
+    id: "project-2",
     title: 'Portfolio Website',
-    description: 'A sleek portfolio website for showcasing work.',
+    description: 'A sleek portfolio website for showcasing creative work with animations and galleries.',
     budget: 2000,
     clientName: 'Jane Smith',
+    category: 'UI/UX Design',
+    skills: ['Figma', 'HTML', 'CSS', 'JavaScript'],
+    deadline: '2025-05-20'
   },
   {
-    title: 'Mobile App',
-    description: 'A cross-platform app with real-time features.',
+    id: "project-3",
+    title: 'Mobile App Development',
+    description: 'A cross-platform app with real-time features, notifications, and social integration.',
     budget: 8000,
     clientName: 'Tech Innovations',
+    category: 'Mobile Development',
+    skills: ['React Native', 'Firebase', 'Redux', 'TypeScript'],
+    deadline: '2025-07-30'
   },
+];
+
+// Stats
+const stats = [
+  { value: '10K+', label: 'Freelancers' },
+  { value: '5K+', label: 'Businesses' },
+  { value: '25K+', label: 'Projects Completed' },
+  { value: '$15M+', label: 'Paid to Freelancers' },
 ];
 ---
 
-<Layout>
-  <section class="hero">
-    <div class="hero-content">
-      <h1 class="animate-title">Welcome to the Designer & Developer Platform</h1>
-      <p class="animate-subtitle">Connect, collaborate, and create amazing projects.</p>
-      <div class="button-container">
-        <a href="#features" class="primary-button">Explore Features</a>
-        <a href="#get-started" class="secondary-button">Get Started</a>
-      </div>
-    </div>
-    <div class="hero-shapes">
-      <div class="shape shape-1"></div>
-      <div class="shape shape-2"></div>
-      <div class="shape shape-3"></div>
-    </div>
-  </section>
-
-  <section id="features" class="features-section">
-    <div class="container">
-      <h2 class="section-title">Our Features</h2>
-      <div class="features-grid">
-        <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+<Layout title="NeuroEight | Connecting Talent with Opportunity">
+  <!-- Hero Section -->
+  <section class="section pt-32 pb-24 overflow-hidden relative">
+    <div class="container-custom relative z-10">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="max-w-2xl mx-auto lg:mx-0 text-center lg:text-left">
+          <h1 class="text-gradient font-heading mb-6">
+            Connect, Collaborate, Create Amazing Projects
+          </h1>
+          <p class="text-lg md:text-xl mb-8 text-neutral-700 dark:text-neutral-300 max-w-xl mx-auto lg:mx-0">
+            NeuroEight brings together talented freelancers and innovative businesses for seamless collaboration on projects of all sizes.
+          </p>
+          <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
+            <a href="#features" class="btn-primary btn-lg">
+              Explore Features
+            </a>
+            <a href="#get-started" class="btn-outline btn-lg">
+              Get Started
+            </a>
           </div>
-          <h3>Post Projects</h3>
-          <p>Clients can post projects and find the best talent for their needs.</p>
+          
+          <!-- Stats -->
+          <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8 text-center">
+            {stats.map(stat => (
+              <div class="bg-white dark:bg-neutral-800 rounded-xl p-4 shadow-soft">
+                <div class="font-heading text-2xl md:text-3xl font-bold text-primary-600 dark:text-primary-400">{stat.value}</div>
+                <div class="text-sm text-neutral-600 dark:text-neutral-400">{stat.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div class="feature-card" data-aos="fade-up" data-aos-delay="150">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
-            </svg>
-          </div>
-          <h3>Bid on Projects</h3>
-          <p>Designers and developers can bid on projects and showcase their skills.</p>
-        </div>
-        <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3>Secure Payments</h3>
-          <p>Seamless and secure payment integration for hassle-free transactions.</p>
+        
+        <div class="hidden lg:block relative">
+          <img 
+            src="/hero-illustration.svg" 
+            alt="Collaboration Illustration" 
+            class="w-full max-w-lg mx-auto dark:opacity-90 drop-shadow-xl"
+          />
         </div>
       </div>
     </div>
+    
+    <!-- Background effects -->
+    <div class="absolute inset-0 -z-10 overflow-hidden">
+      <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-200/30 dark:bg-primary-900/20 blur-3xl"></div>
+      <div class="absolute top-1/2 -left-24 w-64 h-64 rounded-full bg-accent-200/30 dark:bg-accent-900/20 blur-3xl"></div>
+      <div class="absolute -bottom-32 right-12 w-80 h-80 rounded-full bg-secondary-200/30 dark:bg-secondary-900/20 blur-3xl"></div>
+    </div>
   </section>
 
-  <section id="featured-projects" class="projects-section">
-    <div class="container">
-      <h2 class="section-title">Featured Projects</h2>
-      <div class="projects-grid">
-        {featuredProjects.map((project, index) => (
-          <div class="project-wrapper" data-aos="fade-up" data-aos-delay={index * 100}>
-            <ProjectCard {...project} />
+  <!-- Features Section -->
+  <section id="features" class="section bg-neutral-50 dark:bg-neutral-900/30">
+    <div class="container-custom">
+      <div class="text-center mb-16">
+        <h2 class="font-heading mb-4">Powerful Features for Modern Collaboration</h2>
+        <p class="text-lg text-neutral-700 dark:text-neutral-300 max-w-xl mx-auto">
+          Everything you need to find the right talent, manage projects effectively, and grow your business.
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Feature 1 -->
+        <div class="card card-hover">
+          <div class="card-body">
+            <div class="w-12 h-12 mb-4 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+              <svg class="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
+            <h3 class="font-heading text-xl mb-3">Smart Project Matching</h3>
+            <p class="text-neutral-600 dark:text-neutral-400 mb-4">
+              Our AI-powered algorithm matches you with projects or freelancers that align perfectly with your skills and requirements.
+            </p>
+            <a href="/features" class="inline-flex items-center text-primary-600 dark:text-primary-400 font-medium">
+              Learn more
+              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </a>
           </div>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="card card-hover">
+          <div class="card-body">
+            <div class="w-12 h-12 mb-4 rounded-full bg-secondary-100 dark:bg-secondary-900/30 flex items-center justify-center">
+              <svg class="w-6 h-6 text-secondary-600 dark:text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              </svg>
+            </div>
+            <h3 class="font-heading text-xl mb-3">Secure Payments</h3>
+            <p class="text-neutral-600 dark:text-neutral-400 mb-4">
+              Our escrow system ensures that payments are secure and released only when project milestones are completed to satisfaction.
+            </p>
+            <a href="/features" class="inline-flex items-center text-secondary-600 dark:text-secondary-400 font-medium">
+              Learn more
+              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="card card-hover">
+          <div class="card-body">
+            <div class="w-12 h-12 mb-4 rounded-full bg-accent-100 dark:bg-accent-900/30 flex items-center justify-center">
+              <svg class="w-6 h-6 text-accent-600 dark:text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+            </div>
+            <h3 class="font-heading text-xl mb-3">Integrated Communication</h3>
+            <p class="text-neutral-600 dark:text-neutral-400 mb-4">
+              Our built-in messaging system, video calls, and file sharing tools keep all your project communications in one place.
+            </p>
+            <a href="/features" class="inline-flex items-center text-accent-600 dark:text-accent-400 font-medium">
+              Learn more
+              <svg class="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Projects Section -->
+  <section id="featured-projects" class="section">
+    <div class="container-custom">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-12">
+        <div>
+          <h2 class="font-heading">Featured Projects</h2>
+          <p class="text-lg text-neutral-700 dark:text-neutral-300 max-w-xl mt-3">
+            Discover high-quality projects seeking talented professionals.
+          </p>
+        </div>
+        <a href="/projects" class="btn-outline self-start">
+          View All Projects
+        </a>
+      </div>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {featuredProjects.map((project) => (
+          <ProjectCard {...project} />
         ))}
       </div>
     </div>
   </section>
 
-  <section id="get-started" class="cta-section">
-    <div class="container">
-      <h2 class="section-title">Get Started Today</h2>
-      <p class="cta-description">Sign up now and bring your ideas to life.</p>
-      <div class="auth-form-container">
-        <AuthForm />
+  <!-- Testimonials Section -->
+  <section class="section bg-neutral-50 dark:bg-neutral-900/30">
+    <div class="container-custom">
+      <div class="text-center mb-16">
+        <h2 class="font-heading mb-4">What Our Users Say</h2>
+        <p class="text-lg text-neutral-700 dark:text-neutral-300 max-w-xl mx-auto">
+          Success stories from freelancers and businesses who found their perfect match.
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Testimonial 1 -->
+        <div class="card card-hover">
+          <div class="card-body">
+            <div class="flex items-center gap-1 text-amber-400 mb-4">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+            </div>
+            <p class="text-neutral-600 dark:text-neutral-400 mb-6 italic">
+              "As a freelance designer, NeuroEight has transformed how I find clients. The matching algorithm is spot-on, and I've doubled my income in just six months."
+            </p>
+            <div class="flex items-center mt-4">
+              <div class="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
+                <img src="https://i.pravatar.cc/100?img=33" alt="Sarah Johnson" class="w-full h-full object-cover" />
+              </div>
+              <div class="ml-3">
+                <h4 class="font-medium">Sarah Johnson</h4>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">UX Designer</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Testimonial 2 -->
+        <div class="card card-hover">
+          <div class="card-body">
+            <div class="flex items-center gap-1 text-amber-400 mb-4">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+            </div>
+            <p class="text-neutral-600 dark:text-neutral-400 mb-6 italic">
+              "The secure payment system gives us peace of mind when hiring freelancers. We've completed over 50 projects and have built a reliable team of contractors."
+            </p>
+            <div class="flex items-center mt-4">
+              <div class="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
+                <img src="https://i.pravatar.cc/100?img=11" alt="Michael Rodriguez" class="w-full h-full object-cover" />
+              </div>
+              <div class="ml-3">
+                <h4 class="font-medium">Michael Rodriguez</h4>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">CEO, WebFlow Solutions</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Testimonial 3 -->
+        <div class="card card-hover">
+          <div class="card-body">
+            <div class="flex items-center gap-1 text-amber-400 mb-4">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+            </div>
+            <p class="text-neutral-600 dark:text-neutral-400 mb-6 italic">
+              "I launched my web development business on NeuroEight. The platform's tools helped me manage multiple clients and projects simultaneously while keeping everything organized."
+            </p>
+            <div class="flex items-center mt-4">
+              <div class="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
+                <img src="https://i.pravatar.cc/100?img=5" alt="David Chen" class="w-full h-full object-cover" />
+              </div>
+              <div class="ml-3">
+                <h4 class="font-medium">David Chen</h4>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Full-stack Developer</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="cta-shapes">
-      <div class="cta-shape cta-shape-1"></div>
-      <div class="cta-shape cta-shape-2"></div>
+  </section>
+
+  <!-- Get Started / CTA Section -->
+  <section id="get-started" class="section bg-gradient">
+    <div class="container-custom relative z-10">
+      <div class="max-w-4xl mx-auto text-center text-white">
+        <h2 class="font-heading text-white mb-6">Join Our Global Community Today</h2>
+        <p class="text-xl mb-12 text-white/90">
+          Whether you're looking for talent or seeking opportunities, NeuroEight helps you achieve your goals.
+        </p>
+        
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 md:p-8 shadow-soft border border-white/20">
+          <div class="grid md:grid-cols-2 gap-8">
+            <div class="text-left">
+              <h3 class="text-2xl font-heading mb-4">For Freelancers</h3>
+              <ul class="space-y-3 mb-6">
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-green-300 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Find ideal projects matching your skills</span>
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-green-300 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Showcase your portfolio to potential clients</span>
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-green-300 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Receive secure, on-time payments</span>
+                </li>
+              </ul>
+              <a href="/signup?role=freelancer" class="btn-lg bg-white text-primary-600 hover:bg-white/90 transition-colors w-full justify-center">
+                Join as Freelancer
+              </a>
+            </div>
+            
+            <div class="text-left">
+              <h3 class="text-2xl font-heading mb-4">For Businesses</h3>
+              <ul class="space-y-3 mb-6">
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-green-300 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Find top-tier talent for your projects</span>
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-green-300 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Manage projects with comprehensive tools</span>
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-green-300 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>Pay only for milestones you approve</span>
+                </li>
+              </ul>
+              <a href="/signup?role=client" class="btn-lg bg-white text-primary-600 hover:bg-white/90 transition-colors w-full justify-center">
+                Join as Business
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Decorative elements -->
+    <div class="absolute inset-0 overflow-hidden -z-10">
+      <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-black/10 to-black/0"></div>
+      <div class="absolute -top-64 -left-64 w-96 h-96 rounded-full bg-white/5 blur-3xl"></div>
+      <div class="absolute -bottom-64 -right-64 w-96 h-96 rounded-full bg-white/5 blur-3xl"></div>
     </div>
   </section>
+
+  <script>
+    // Simple AOS (Animate On Scroll) implementation
+    document.addEventListener('DOMContentLoaded', () => {
+      const animatedElements = document.querySelectorAll('[data-aos]');
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('aos-animate');
+          }
+        });
+      }, {
+        threshold: 0.1
+      });
+      
+      animatedElements.forEach(element => {
+        observer.observe(element);
+        
+        // Apply delay if specified
+        const delay = element.getAttribute('data-aos-delay');
+        if (delay) {
+          element.style.transitionDelay = `${delay}ms`;
+        }
+      });
+    });
+  </script>
 </Layout>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-
-  :root {
-    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-    --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
-    --accent-gradient: linear-gradient(135deg, #14b8a6 0%, #0ea5e9 50%, #6366f1 100%);
-    --text-gradient: linear-gradient(90deg, #3b82f6, #8b5cf6, #d946ef);
-    
-    --primary-color: #6366f1;
-    --secondary-color: #8b5cf6;
-    --accent-color: #14b8a6;
-    --text-color: #1e293b;
-    --text-light: #64748b;
-    --bg-light: #f8fafc;
-    --bg-lighter: #ffffff;
-    --bg-dark: #1e293b;
-    
-    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    
-    --border-radius-sm: 0.375rem;
-    --border-radius-md: 0.75rem;
-    --border-radius-lg: 1.5rem;
-    
-    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-
-  body {
-    font-family: var(--font-sans);
-    color: var(--text-color);
-    line-height: 1.6;
-    background-color: var(--bg-light);
-  }
-
-  .container {
-    width: 100%;
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-
-  /* Hero Section */
-  .hero {
-    position: relative;
-    overflow: hidden;
-    min-height: 85vh;
-    display: flex;
-    align-items: center;
-    padding: 5rem 0;
-    background-image: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 10;
-    max-width: 800px;
-    margin: 0 auto;
-    text-align: center;
-  }
-
-  .animate-title {
-    font-size: 3.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    line-height: 1.2;
-    background-image: var(--text-gradient);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    animation: fade-in 1.5s ease, slide-up 1.5s ease;
-  }
-
-  .animate-subtitle {
-    font-size: 1.5rem;
-    color: var(--text-light);
-    margin-bottom: 2rem;
-    animation: fade-in 1.5s ease 0.3s, slide-up 1.5s ease 0.3s both;
-  }
-
-  .button-container {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 2.5rem;
-    animation: fade-in 1.5s ease 0.6s, slide-up 1.5s ease 0.6s both;
-  }
-
-  .primary-button {
-    background-image: var(--primary-gradient);
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 9999px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: var(--shadow-md);
-  }
-
-  .primary-button:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .secondary-button {
-    background-color: white;
-    color: var(--primary-color);
-    padding: 1rem 2rem;
-    border-radius: 9999px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .secondary-button:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
-  }
-
-  /* Hero Shapes */
-  .hero-shapes {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .shape {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.4;
-    filter: blur(60px);
-  }
-
-  .shape-1 {
-    top: -100px;
-    right: 10%;
-    width: 400px;
-    height: 400px;
-    background-color: #6366f1;
-    animation: float 15s ease-in-out infinite;
-  }
-
-  .shape-2 {
-    bottom: -150px;
-    left: 5%;
-    width: 500px;
-    height: 500px;
-    background-color: #8b5cf6;
-    animation: float 20s ease-in-out infinite reverse;
-  }
-
-  .shape-3 {
-    top: 40%;
-    left: 50%;
-    width: 300px;
-    height: 300px;
-    background-color: #ec4899;
-    animation: float 18s ease-in-out 1s infinite;
-  }
-
-  /* Features Section */
-  .features-section {
-    padding: 8rem 0;
-    background-color: var(--bg-light);
-  }
-
-  .section-title {
-    text-align: center;
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 4rem;
-    background-image: var(--text-gradient);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-  }
-
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 2rem;
-  }
-
-  @media (min-width: 768px) {
-    .features-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  .feature-card {
-    background: var(--bg-lighter);
-    border-radius: var(--border-radius-md);
-    padding: 2.5rem;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.5s ease, box-shadow 0.5s ease;
-    text-align: center;
-  }
-
-  .feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .feature-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 4rem;
-    height: 4rem;
-    background-image: var(--primary-gradient);
-    border-radius: 50%;
-    margin-bottom: 1.5rem;
-    color: white;
-  }
-
-  .feature-card h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-  }
-
-  .feature-card p {
-    color: var(--text-light);
-  }
-
-  /* Projects Section */
-  .projects-section {
-    padding: 8rem 0;
-    background-color: white;
-  }
-
-  .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 2rem;
-  }
-
-  @media (min-width: 768px) {
-    .projects-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .projects-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  .project-wrapper {
-    height: 100%;
-  }
-
-  /* CTA Section */
-  .cta-section {
-    position: relative;
-    padding: 8rem 0;
-    background-image: var(--secondary-gradient);
-    color: white;
-    overflow: hidden;
-    text-align: center;
-  }
-
-  .cta-description {
-    font-size: 1.5rem;
-    max-width: 600px;
-    margin: 0 auto 3rem;
-  }
-
-  .auth-form-container {
-    max-width: 500px;
-    margin: 0 auto;
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: var(--border-radius-md);
-    padding: 2rem;
-    box-shadow: var(--shadow-lg);
-  }
-
-  .cta-shapes {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  .cta-shape {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.2;
-    filter: blur(60px);
-  }
-
-  .cta-shape-1 {
-    top: -10%;
-    right: -5%;
-    width: 500px;
-    height: 500px;
-    background-color: #6366f1;
-    animation: float 15s ease-in-out infinite reverse;
-  }
-
-  .cta-shape-2 {
-    bottom: -15%;
-    left: -5%;
-    width: 600px;
-    height: 600px;
-    background-color: #ec4899;
-    animation: float 20s ease-in-out infinite;
-  }
-  
-  /* Animations */
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes slide-up {
-    from {
-      transform: translateY(30px);
-    }
-    to {
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes float {
-    0% {
-      transform: translate(0, 0);
-    }
-    50% {
-      transform: translate(20px, 20px);
-    }
-    100% {
-      transform: translate(0, 0);
-    }
-  }
-
+  /* Animation styles */
   [data-aos="fade-up"] {
     opacity: 0;
     transform: translateY(30px);
@@ -470,30 +432,3 @@ const featuredProjects = [
     transform: translateY(0);
   }
 </style>
-
-<script>
-  // Simple AOS (Animate On Scroll) implementation
-  document.addEventListener('DOMContentLoaded', () => {
-    const animatedElements = document.querySelectorAll('[data-aos]');
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('aos-animate');
-        }
-      });
-    }, {
-      threshold: 0.1
-    });
-    
-    animatedElements.forEach(element => {
-      observer.observe(element);
-      
-      // Apply delay if specified
-      const delay = element.getAttribute('data-aos-delay');
-      if (delay) {
-        element.style.transitionDelay = `${delay}ms`;
-      }
-    });
-  });
-</script>

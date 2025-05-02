@@ -1,7 +1,5 @@
 ---
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
+import { supabase } from '../lib/supabase.js';
 
 interface Message {
   id: string;
@@ -14,8 +12,11 @@ interface Message {
 let messages: Message[] = [];
 
 async function fetchMessages() {
-  const { data, error } = await supabase.from<Message>('messages').select('*').order('timestamp', { ascending: true });
-  if (data) messages = data;
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .order('timestamp', { ascending: true });
+  if (data) messages = data as Message[];
   if (error) console.error(error);
 }
 
@@ -25,8 +26,12 @@ async function sendMessage(event: SubmitEvent) {
   const messageInput = target.message as HTMLInputElement;
   const newMessage = messageInput.value;
 
+  // Get the current user properly handling the Promise
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id || 'anonymous';
+
   const { error } = await supabase.from('messages').insert({
-    sender_id: supabase.auth.getUser()?.id || '',
+    sender_id: userId,
     receiver_id: 'receiver-id-placeholder', // Replace with actual receiver ID
     message: newMessage,
     timestamp: new Date().toISOString(),
@@ -44,13 +49,13 @@ fetchMessages();
   <h2 class="text-xl font-bold mb-4">Chat</h2>
   <div class="h-64 overflow-y-auto border p-2 mb-4">
     {messages.map((msg: Message) => (
-      <div class="mb-2" key={msg.id}>
+      <div class="mb-2" id={msg.id}>
         <p class="text-sm text-gray-500">{msg.sender_id}</p>
         <p class="text-gray-800">{msg.message}</p>
       </div>
     ))}
   </div>
-  <form onsubmit="sendMessage" class="flex">
+  <form onsubmit={sendMessage} class="flex">
     <input
       type="text"
       name="message"

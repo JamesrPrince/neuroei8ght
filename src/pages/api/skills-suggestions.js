@@ -1,11 +1,19 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase, isSupabaseConfigured } from "../../lib/supabase.js";
 
 export async function GET({ request, url }) {
   try {
-    // Get Supabase client
-    const supabaseUrl = import.meta.env.SUPABASE_URL;
-    const supabaseKey = import.meta.env.SUPABASE_KEY;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Check if Supabase is properly configured
+    if (!isSupabaseConfigured()) {
+      return new Response(
+        JSON.stringify({
+          error: "API service unavailable - database configuration issue",
+        }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Get the search query parameter
     const query = url.searchParams.get("query");

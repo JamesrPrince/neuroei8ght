@@ -1,11 +1,6 @@
 ---
 // AdvancedSearch.astro - AI-powered search and filtering for projects
-import { createClient } from '@supabase/supabase-js';
-
-// Get Supabase credentials from environment variables
-const supabaseUrl = import.meta.env.SUPABASE_URL;
-const supabaseKey = import.meta.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 
 // Get filter parameters from query string or props
 const { 

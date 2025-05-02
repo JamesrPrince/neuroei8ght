@@ -1,41 +1,35 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { createClient } from '@supabase/supabase-js';
-import Analytics from '../components/Analytics.astro';
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 
-const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
-
+// Define interface for profile data
 interface Profile {
   name: string;
+  title: string;
   bio: string;
-  skills: string[];
-  portfolio: File[];
-  location: string;
+  avatar: string;
   hourlyRate: number;
-  availability: string;
+  skills: string[];
+  email: string;
+  location: string;
+  website: string;
 }
 
-interface Review {
-  reviewer_id: string;
-  reviewee_id: string;
-  rating: number;
-  comment: string;
-  project_id: string;
-  reviewer_name: string;
-  date: Date;
-}
-
-let profile: Profile = { 
-  name: 'Jane Smith', 
-  bio: 'Creative UI/UX designer with 5 years of experience in mobile app and web design.',
-  skills: ['UI/UX Design', 'Figma', 'Adobe XD', 'Sketch', 'Prototyping', 'User Research'],
-  portfolio: [],
-  location: 'San Francisco, CA',
-  hourlyRate: 75,
-  availability: 'Part-time'
+// Initialize empty profile
+let profile: Profile = {
+  name: 'User Name',
+  title: 'Professional Title',
+  bio: 'No bio available',
+  avatar: '/placeholder-avatar.png',
+  hourlyRate: 0,
+  skills: [],
+  email: '',
+  location: '',
+  website: ''
 };
 
-let reviews: Review[] = [
+// Sample reviews until we connect to the database
+let reviews = [
   {
     reviewer_id: '1',
     reviewee_id: '123',

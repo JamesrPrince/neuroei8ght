@@ -1,15 +1,23 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase, isSupabaseConfigured } from "../../lib/supabase.js";
 import Stripe from "stripe";
 
 export async function POST({ request }) {
   try {
+    // Check if Supabase is properly configured
+    if (!isSupabaseConfigured()) {
+      return new Response(
+        JSON.stringify({
+          error: "API service unavailable - database configuration issue",
+        }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Initialize Stripe with secret key
     const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
-
-    // Get Supabase client
-    const supabaseUrl = import.meta.env.SUPABASE_URL;
-    const supabaseKey = import.meta.env.SUPABASE_KEY;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parse request body
     const body = await request.json();

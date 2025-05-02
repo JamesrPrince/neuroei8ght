@@ -3,8 +3,23 @@
 import { LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/config';
 import { getAvailableLanguages } from '../i18n/utils';
 
+// Define language interfaces
+interface LanguageInfo {
+  code: string;
+  name: string;
+  locale: string;
+  flag: string;
+}
+
+interface Languages {
+  [key: string]: LanguageInfo;
+}
+
 // Get the current language from props or use default
 const { currentLanguage = DEFAULT_LANGUAGE } = Astro.props;
+
+// Type assertion for LANGUAGES object
+const typedLanguages = LANGUAGES as Languages;
 
 // Get all available languages
 const availableLanguages = getAvailableLanguages();
@@ -13,12 +28,12 @@ const availableLanguages = getAvailableLanguages();
 <div class="language-selector relative">
   <button
     id="language-dropdown-toggle"
-    class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+    class="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors"
     aria-label="Select language"
   >
-    <span class="text-lg">{LANGUAGES[currentLanguage].flag}</span>
-    <span class="font-medium hidden sm:inline">{LANGUAGES[currentLanguage].name}</span>
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <span class="text-lg">{typedLanguages[currentLanguage].flag}</span>
+    <span class="font-medium hidden sm:inline">{typedLanguages[currentLanguage].name}</span>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
     </svg>
   </button>
@@ -26,19 +41,19 @@ const availableLanguages = getAvailableLanguages();
   <!-- Language Dropdown -->
   <div 
     id="language-dropdown" 
-    class="hidden absolute right-0 mt-2 py-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-10 border border-gray-200 dark:border-gray-700"
+    class="hidden absolute right-0 mt-2 py-2 w-48 bg-white dark:bg-neutral-800 rounded-lg shadow-soft z-10 border border-neutral-200 dark:border-neutral-700"
   >
     {availableLanguages.map(language => (
       <button
-        class={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 ${
-          language.code === currentLanguage ? 'bg-gray-100 dark:bg-gray-700' : ''
+        class={`w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 flex items-center space-x-3 transition-colors ${
+          language.code === currentLanguage ? 'bg-neutral-100 dark:bg-neutral-700' : ''
         }`}
         data-language-code={language.code}
       >
         <span class="text-lg">{language.flag}</span>
-        <span class="text-gray-700 dark:text-gray-300">{language.name}</span>
+        <span class="text-neutral-800 dark:text-neutral-200">{language.name}</span>
         {language.code === currentLanguage && (
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500 ml-auto" viewBox="0 0 20 20" fill="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary-500 ml-auto" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
           </svg>
         )}
@@ -52,18 +67,31 @@ const availableLanguages = getAvailableLanguages();
   const dropdownToggle = document.getElementById('language-dropdown-toggle');
   const dropdown = document.getElementById('language-dropdown');
   const languageButtons = document.querySelectorAll('[data-language-code]');
+  const dropdownIcon = dropdownToggle?.querySelector('svg');
   
   // Toggle dropdown visibility
   if (dropdownToggle && dropdown) {
     dropdownToggle.addEventListener('click', () => {
+      const isHidden = dropdown.classList.contains('hidden');
       dropdown.classList.toggle('hidden');
+      
+      // Rotate arrow icon
+      if (dropdownIcon) {
+        if (isHidden) {
+          dropdownIcon.classList.add('rotate-180');
+        } else {
+          dropdownIcon.classList.remove('rotate-180');
+        }
+      }
     });
     
     // Close dropdown when clicking outside
-    document.addEventListener('click', (event) => {
-      const isClickInside = dropdownToggle.contains(event.target) || dropdown.contains(event.target);
+    document.addEventListener('click', (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const isClickInside = dropdownToggle.contains(target) || dropdown.contains(target);
       if (!isClickInside && !dropdown.classList.contains('hidden')) {
         dropdown.classList.add('hidden');
+        if (dropdownIcon) dropdownIcon.classList.remove('rotate-180');
       }
     });
   }
@@ -73,6 +101,9 @@ const availableLanguages = getAvailableLanguages();
     button.addEventListener('click', () => {
       const langCode = button.getAttribute('data-language-code');
       if (langCode) {
+        // Show loading state
+        button.classList.add('opacity-75');
+        
         // Save the selected language preference
         localStorage.setItem('preferredLanguage', langCode);
         
@@ -96,5 +127,17 @@ const availableLanguages = getAvailableLanguages();
   #language-dropdown:not(.hidden) {
     opacity: 1;
     transform: translateY(0);
+  }
+  
+  /* First item rounded corners */
+  #language-dropdown button:first-child {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+  }
+  
+  /* Last item rounded corners */
+  #language-dropdown button:last-child {
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
   }
 </style>
