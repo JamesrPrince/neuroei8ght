@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { createClient } from '@supabase/supabase-js';
+import Analytics from '../components/Analytics.astro';
 
 const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
 
@@ -156,6 +157,11 @@ const portfolioProjects = [
     description: 'Travel planning application design',
   }
 ];
+
+// Determine user type for analytics - in a real app, this would come from user data
+const userType = 'freelancer'; // or 'client' or 'admin'
+const userId = '123'; // This would normally be fetched from the authenticated user
+
 ---
 
 <Layout>
@@ -244,6 +250,7 @@ const portfolioProjects = [
               <button class="tab-button" data-tab="portfolio">Portfolio</button>
               <button class="tab-button" data-tab="reviews">Reviews</button>
               <button class="tab-button" data-tab="edit">Edit Profile</button>
+              <button class="tab-button" data-tab="analytics">Analytics</button>
             </div>
 
             <div class="tab-content" id="about-tab">
@@ -324,6 +331,13 @@ const portfolioProjects = [
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+
+            <div class="tab-content hidden" id="analytics-tab">
+              <div class="content-card" data-aos="fade-up">
+                <h3 class="card-title">Your Performance Analytics</h3>
+                <Analytics userType={userType} userId={userId} />
               </div>
             </div>
 
@@ -463,6 +477,10 @@ const portfolioProjects = [
                   </div>
                 </form>
               </div>
+            </div>
+
+            <div class="tab-content hidden" id="analytics">
+              <Analytics userType={userType} userId={userId} />
             </div>
           </div>
         </div>
@@ -636,7 +654,7 @@ const portfolioProjects = [
   }
 
   .profile-title {
-    color: var(--text-light);
+    color: var (--text-light);
     margin-bottom: 1rem;
   }
 
@@ -951,7 +969,7 @@ const portfolioProjects = [
 
   .review-date {
     font-size: 0.875rem;
-    color: var(--text-light);
+    color: var (--text-light);
   }
 
   .review-comment {
@@ -1152,6 +1170,61 @@ const portfolioProjects = [
       fileInput.addEventListener('change', (e) => {
         // Handle preview logic here if needed
       });
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Tab navigation functionality
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    function activateTab(tabId) {
+      // Hide all tab contents
+      tabContents.forEach(content => {
+        content.classList.add('hidden');
+      });
+      
+      // Show the selected tab content
+      const selectedTab = document.getElementById(`${tabId}-tab`);
+      if (selectedTab) {
+        selectedTab.classList.remove('hidden');
+      }
+      
+      // Update active state of tab buttons
+      tabButtons.forEach(button => {
+        if (button.dataset.tab === tabId) {
+          button.classList.add('active');
+        } else {
+          button.classList.remove('active');
+        }
+      });
+
+      // Save the active tab in localStorage
+      localStorage.setItem('activeProfileTab', tabId);
+    }
+    
+    // Add click event to tab buttons
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const tabId = button.dataset.tab;
+        activateTab(tabId);
+      });
+    });
+    
+    // Check if there's a saved active tab in localStorage
+    const savedTab = localStorage.getItem('activeProfileTab');
+    if (savedTab) {
+      activateTab(savedTab);
+    } else {
+      // Default to overview tab
+      activateTab('overview');
+    }
+
+    // Check if there's a tab parameter in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+      activateTab(tabParam);
     }
   });
 </script>

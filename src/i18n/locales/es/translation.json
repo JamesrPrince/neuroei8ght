@@ -1,0 +1,235 @@
+{
+  "common": {
+    "buttons": {
+      "submit": "Enviar",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "search": "Buscar",
+      "apply": "Aplicar",
+      "clear": "Limpiar",
+      "continue": "Continuar",
+      "back": "Atrás",
+      "login": "Iniciar Sesión",
+      "signup": "Registrarse",
+      "logout": "Cerrar Sesión"
+    },
+    "labels": {
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "username": "Nombre de usuario",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "country": "País",
+      "language": "Idioma",
+      "category": "Categoría",
+      "tags": "Etiquetas",
+      "description": "Descripción",
+      "price": "Precio",
+      "budget": "Presupuesto",
+      "deadline": "Fecha límite",
+      "status": "Estado",
+      "skills": "Habilidades",
+      "experience": "Experiencia"
+    },
+    "messages": {
+      "success": "¡Éxito!",
+      "error": "Ha ocurrido un error",
+      "loading": "Cargando...",
+      "required": "Campo obligatorio",
+      "invalid": "Formato inválido",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "createSuccess": "Creado exitosamente",
+      "updateSuccess": "Actualizado exitosamente",
+      "deleteSuccess": "Eliminado exitosamente",
+      "sessionExpired": "Su sesión ha expirado, por favor inicie sesión nuevamente",
+      "welcome": "Bienvenido a NeuroEight Freelance Marketplace"
+    },
+    "navigation": {
+      "home": "Inicio",
+      "projects": "Proyectos",
+      "profile": "Perfil",
+      "messages": "Mensajes",
+      "dashboard": "Panel",
+      "settings": "Configuración",
+      "admin": "Admin",
+      "notifications": "Notificaciones"
+    },
+    "footer": {
+      "about": "Sobre Nosotros",
+      "contact": "Contacto",
+      "terms": "Términos de Servicio",
+      "privacy": "Política de Privacidad",
+      "copyright": "© {{year}} NeuroEight Freelance Marketplace. Todos los derechos reservados."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Inicie sesión en su cuenta",
+      "subtitle": "¡Bienvenido de nuevo! Ingrese sus credenciales",
+      "emailPlaceholder": "nombre@ejemplo.com",
+      "passwordPlaceholder": "Ingrese su contraseña",
+      "rememberMe": "Recordarme",
+      "forgotPassword": "¿Olvidó su contraseña?",
+      "noAccount": "¿No tiene una cuenta?",
+      "createAccount": "Cree una ahora"
+    },
+    "signup": {
+      "title": "Cree su cuenta",
+      "subtitle": "Únase a nuestra comunidad de freelancers y clientes",
+      "namePlaceholder": "Su nombre completo",
+      "emailPlaceholder": "nombre@ejemplo.com",
+      "passwordPlaceholder": "Cree una contraseña segura",
+      "confirmPasswordPlaceholder": "Confirme su contraseña",
+      "accountTypeClient": "Busco contratar",
+      "accountTypeFreelancer": "Busco trabajo",
+      "termsAgreement": "Acepto los {{terms}} y la {{privacy}}",
+      "alreadyHaveAccount": "¿Ya tiene una cuenta?",
+      "login": "Iniciar sesión"
+    },
+    "forgotPassword": {
+      "title": "¿Olvidó su contraseña?",
+      "subtitle": "Ingrese su dirección de correo electrónico para recibir un enlace de restablecimiento",
+      "emailSent": "Revise su correo electrónico para obtener instrucciones de restablecimiento",
+      "resetPassword": "Restablecer Contraseña",
+      "rememberPassword": "¿Recuerda su contraseña?",
+      "backToLogin": "Volver al inicio de sesión"
+    }
+  },
+  "projects": {
+    "browse": {
+      "title": "Explorar Proyectos",
+      "subtitle": "Encuentre su próxima oportunidad",
+      "newProject": "Publicar Nuevo Proyecto",
+      "filterByCategory": "Filtrar por categoría",
+      "sortBy": "Ordenar por",
+      "sortOptions": {
+        "newest": "Más recientes primero",
+        "oldest": "Más antiguos primero",
+        "budget-high": "Presupuesto (Mayor a Menor)",
+        "budget-low": "Presupuesto (Menor a Mayor)",
+        "deadline": "Fecha límite próxima"
+      },
+      "searchPlaceholder": "Buscar proyectos o habilidades...",
+      "noResults": "No se encontraron proyectos que coincidan con sus criterios"
+    },
+    "details": {
+      "postedBy": "Publicado por",
+      "postedOn": "Publicado el",
+      "proposals": "Propuestas",
+      "applicants": "Candidatos",
+      "applyNow": "Aplicar Ahora",
+      "saveProject": "Guardar Proyecto",
+      "share": "Compartir",
+      "report": "Reportar Proyecto",
+      "projectDescriptionTitle": "Descripción del Proyecto",
+      "skillsRequired": "Habilidades Requeridas",
+      "attachments": "Archivos Adjuntos",
+      "similarProjects": "Proyectos Similares",
+      "budgetRange": "Rango de Presupuesto"
+    },
+    "create": {
+      "title": "Crear un Nuevo Proyecto",
+      "subtitle": "Encuentre al freelancer perfecto para su proyecto",
+      "basicInfo": "Información Básica",
+      "projectTitle": "Título del Proyecto",
+      "projectTitlePlaceholder": "Ingrese un título claro para su proyecto",
+      "projectDescription": "Descripción del Proyecto",
+      "projectDescriptionPlaceholder": "Describa su proyecto en detalle",
+      "projectCategory": "Categoría del Proyecto",
+      "projectSkills": "Habilidades Requeridas",
+      "projectSkillsPlaceholder": "Agregue las habilidades necesarias para este proyecto",
+      "budget": "Presupuesto",
+      "budgetType": "Tipo de Presupuesto",
+      "budgetTypesOptions": {
+        "fixed": "Precio Fijo",
+        "hourly": "Tarifa por Hora",
+        "milestone": "Basado en Hitos"
+      },
+      "timeline": "Cronograma",
+      "startDate": "Fecha de Inicio",
+      "deadline": "Fecha Límite",
+      "projectDuration": "Duración Estimada",
+      "attachments": "Archivos Adjuntos",
+      "addAttachment": "Agregar Archivo",
+      "additionalDetails": "Detalles Adicionales",
+      "publishProject": "Publicar Proyecto",
+      "saveAsDraft": "Guardar como Borrador"
+    }
+  },
+  "profile": {
+    "overview": {
+      "title": "Resumen del Perfil",
+      "editProfile": "Editar Perfil",
+      "contactInfo": "Información de Contacto",
+      "skills": "Habilidades",
+      "portfolio": "Portafolio",
+      "experience": "Experiencia",
+      "education": "Educación",
+      "languages": "Idiomas",
+      "memberSince": "Miembro desde",
+      "lastActive": "Último activo",
+      "completedProjects": "Proyectos Completados",
+      "ongoingProjects": "Proyectos en Curso",
+      "rating": "Calificación"
+    },
+    "settings": {
+      "title": "Configuración del Perfil",
+      "personalInfo": "Información Personal",
+      "accountSettings": "Configuración de la Cuenta",
+      "paymentMethods": "Métodos de Pago",
+      "notifications": "Configuración de Notificaciones",
+      "securitySettings": "Configuración de Seguridad",
+      "deleteAccount": "Eliminar Cuenta",
+      "emailNotifications": "Notificaciones por Correo",
+      "pushNotifications": "Notificaciones Push",
+      "twoFactorAuth": "Autenticación de Dos Factores",
+      "changePassword": "Cambiar Contraseña",
+      "linkedAccounts": "Cuentas Vinculadas"
+    }
+  },
+  "payments": {
+    "title": "Gestión de Pagos",
+    "addPaymentMethod": "Agregar Método de Pago",
+    "makePayment": "Realizar Pago",
+    "paymentHistory": "Historial de Pagos",
+    "milestones": "Hitos del Proyecto",
+    "escrow": "Depósito en Garantía",
+    "releasePayment": "Liberar Pago",
+    "withdrawFunds": "Retirar Fondos",
+    "paymentMethods": "Métodos de Pago",
+    "invoices": "Facturas",
+    "transactionHistory": "Historial de Transacciones",
+    "earnings": "Ganancias",
+    "paymentStatus": {
+      "pending": "Pendiente",
+      "completed": "Completado",
+      "failed": "Fallido",
+      "refunded": "Reembolsado",
+      "inEscrow": "En Depósito"
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "new": "Nuevo",
+    "earlier": "Anteriores",
+    "projectUpdates": "Actualizaciones de Proyectos",
+    "messages": "Mensajes",
+    "payments": "Pagos",
+    "system": "Sistema",
+    "types": {
+      "projectAwarded": "Proyecto Adjudicado",
+      "newMessage": "Nuevo Mensaje",
+      "paymentReceived": "Pago Recibido",
+      "milestoneCompleted": "Hito Completado",
+      "reviewReceived": "Reseña Recibida",
+      "projectInvitation": "Invitación a Proyecto",
+      "deadlineReminder": "Recordatorio de Fecha Límite",
+      "systemAnnouncement": "Anuncio del Sistema"
+    }
+  }
+}

@@ -1,17 +1,628 @@
 ---
-const GA_TRACKING_ID = 'YOUR_GOOGLE_ANALYTICS_TRACKING_ID';
+// Analytics.astro - Component for visualizing user and platform metrics
+const { userType = 'freelancer', userId } = Astro.props;
 
-if (typeof window !== 'undefined' && GA_TRACKING_ID) {
-  window.dataLayer = window.dataLayer || [];
-  function gtag(...args: any[]) {
-    (window.dataLayer as any).push(args);
-  }
-  gtag('js', new Date());
-  gtag('config', GA_TRACKING_ID);
+// Determine what data to display based on user type
+const isFreelancer = userType === 'freelancer';
+const isClient = userType === 'client';
+const isAdmin = userType === 'admin';
 
-  const script = document.createElement('script');
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`;
-  script.async = true;
-  document.head.appendChild(script);
+// In a real implementation, fetch data from Supabase
+// This example shows how we'd structure the data fetching
+// For now we're using hardcoded data for the demo, but the structure is ready for API integration
+async function fetchAnalyticsData(userType, userId) {
+  // In production, this would be a real API call
+  // const { data, error } = await supabase
+  //   .from(userType === 'freelancer' ? 'freelancer_analytics' : 
+  //         userType === 'client' ? 'client_analytics' : 'platform_analytics')
+  //   .select('*')
+  //   .eq(userType !== 'admin' ? 'user_id' : 'id', userId)
+  //   .single();
+  
+  // if (error) throw new Error(error.message);
+  // return data;
+
+  // For demo purposes we're using hardcoded data
+  const freelancerData = {
+    earnings: {
+      total: 8750,
+      month: 1250,
+      pending: 500
+    },
+    projects: {
+      completed: 12,
+      active: 3,
+      proposals: 8
+    },
+    skills: [
+      { name: 'JavaScript', projects: 8, rating: 4.8 },
+      { name: 'React', projects: 6, rating: 4.7 },
+      { name: 'Node.js', projects: 5, rating: 4.6 },
+      { name: 'UI/UX Design', projects: 3, rating: 4.5 }
+    ],
+    timeTracked: {
+      total: 480, // hours
+      thisWeek: 24,
+      thisMonth: 96
+    },
+    ratings: {
+      average: 4.8,
+      count: 28
+    }
+  };
+
+  const clientData = {
+    projects: {
+      posted: 15,
+      active: 4,
+      completed: 9
+    },
+    spending: {
+      total: 12500,
+      month: 2200,
+      inEscrow: 1800
+    },
+    freelancers: {
+      hired: 10,
+      favorite: 5
+    },
+    projectSuccess: {
+      onTime: 85, // percentage
+      onBudget: 90, // percentage
+      satisfaction: 4.6 // out of 5
+    }
+  };
+
+  const platformData = {
+    users: {
+      total: 5420,
+      freelancers: 3850,
+      clients: 1570,
+      newThisMonth: 320
+    },
+    projects: {
+      total: 2840,
+      active: 620,
+      completed: 1980,
+      newThisMonth: 180
+    },
+    transactions: {
+      total: 895000,
+      month: 68000,
+      fees: 44750
+    },
+    categories: [
+      { name: 'Web Development', projects: 680, value: 310000 },
+      { name: 'Mobile Development', projects: 420, value: 240000 },
+      { name: 'Design', projects: 560, value: 180000 },
+      { name: 'Content Writing', projects: 380, value: 95000 },
+      { name: 'Marketing', projects: 290, value: 70000 }
+    ]
+  };
+
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  return userType === 'freelancer' ? freelancerData : 
+         userType === 'client' ? clientData : platformData;
+}
+
+// Select the appropriate data based on user type
+let userData;
+try {
+  userData = await fetchAnalyticsData(userType, userId);
+} catch (error) {
+  console.error('Error fetching analytics data:', error);
+  userData = null;
 }
 ---
+
+<div class="analytics-dashboard">
+  <div id="loading-spinner" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading your analytics data...</p>
+  </div>
+  
+  <div id="analytics-content" class="analytics-content hidden">
+    <div class="dashboard-header">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
+        {isFreelancer ? 'Freelancer Dashboard' : 
+         isClient ? 'Client Dashboard' : 
+         'Platform Analytics'}
+      </h2>
+      <div class="flex items-center space-x-2">
+        <select id="time-range" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm">
+          <option value="week">This Week</option>
+          <option value="month" selected>This Month</option>
+          <option value="quarter">This Quarter</option>
+          <option value="year">This Year</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
+    </div>
+
+    {!userData && (
+      <div class="flex flex-col items-center justify-center p-12">
+        <div class="loading-spinner"></div>
+        <p class="mt-4 text-gray-500 dark:text-gray-400">Loading your analytics data...</p>
+      </div>
+    )}
+
+    {userData && (
+      <>
+        <!-- Key metrics cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+          {isFreelancer && (
+            <>
+              <div class="stat-card">
+                <h3>Total Earnings</h3>
+                <div class="stat-value">${userData.earnings.total.toLocaleString()}</div>
+                <div class="stat-label">This month: ${userData.earnings.month.toLocaleString()}</div>
+              </div>
+              <div class="stat-card">
+                <h3>Projects</h3>
+                <div class="stat-value flex space-x-4">
+                  <div>
+                    <span class="text-2xl font-bold">{userData.projects.completed}</span>
+                    <div class="text-xs">Completed</div>
+                  </div>
+                  <div>
+                    <span class="text-2xl font-bold text-green-600">{userData.projects.active}</span>
+                    <div class="text-xs">Active</div>
+                  </div>
+                  <div>
+                    <span class="text-2xl font-bold text-blue-600">{userData.projects.proposals}</span>
+                    <div class="text-xs">Proposals</div>
+                  </div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <h3>Hours Tracked</h3>
+                <div class="stat-value">{userData.timeTracked.total}</div>
+                <div class="stat-label">This week: {userData.timeTracked.thisWeek}h</div>
+              </div>
+              <div class="stat-card">
+                <h3>Rating</h3>
+                <div class="stat-value flex items-center">
+                  <span class="text-yellow-500 mr-2">★</span>
+                  {userData.ratings.average}
+                  <span class="text-sm font-normal ml-2 text-gray-500">({userData.ratings.count} reviews)</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {isClient && (
+            <>
+              <div class="stat-card">
+                <h3>Total Spending</h3>
+                <div class="stat-value">${userData.spending.total.toLocaleString()}</div>
+                <div class="stat-label">This month: ${userData.spending.month.toLocaleString()}</div>
+              </div>
+              <div class="stat-card">
+                <h3>Projects</h3>
+                <div class="stat-value flex space-x-4">
+                  <div>
+                    <span class="text-2xl font-bold">{userData.projects.posted}</span>
+                    <div class="text-xs">Posted</div>
+                  </div>
+                  <div>
+                    <span class="text-2xl font-bold text-green-600">{userData.projects.active}</span>
+                    <div class="text-xs">Active</div>
+                  </div>
+                  <div>
+                    <span class="text-2xl font-bold text-blue-600">{userData.projects.completed}</span>
+                    <div class="text-xs">Completed</div>
+                  </div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <h3>Freelancers</h3>
+                <div class="stat-value">{userData.freelancers.hired}</div>
+                <div class="stat-label">Hired to date</div>
+              </div>
+              <div class="stat-card">
+                <h3>Project Success</h3>
+                <div class="stat-value flex items-center">
+                  <span class="text-2xl font-bold text-green-600">{userData.projectSuccess.onTime}%</span>
+                  <span class="text-sm font-normal ml-2 text-gray-500">On Time</span>
+                </div>
+                <div class="stat-label">{userData.projectSuccess.onBudget}% On Budget</div>
+              </div>
+            </>
+          )}
+
+          {isAdmin && (
+            <>
+              <div class="stat-card">
+                <h3>Total Users</h3>
+                <div class="stat-value">{userData.users.total.toLocaleString()}</div>
+                <div class="stat-label">New this month: {userData.users.newThisMonth}</div>
+              </div>
+              <div class="stat-card">
+                <h3>Projects</h3>
+                <div class="stat-value">{userData.projects.total.toLocaleString()}</div>
+                <div class="stat-label">Active: {userData.projects.active}</div>
+              </div>
+              <div class="stat-card">
+                <h3>Total Revenue</h3>
+                <div class="stat-value">${userData.transactions.total.toLocaleString()}</div>
+                <div class="stat-label">Fees: ${userData.transactions.fees.toLocaleString()}</div>
+              </div>
+              <div class="stat-card">
+                <h3>Top Category</h3>
+                <div class="stat-value">{userData.categories[0].name}</div>
+                <div class="stat-label">${userData.categories[0].value.toLocaleString()} value</div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <!-- Chart containers -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+          <div class="chart-card">
+            <h3 class="chart-title">{isFreelancer ? 'Earnings' : isClient ? 'Spending' : 'Platform Revenue'} Over Time</h3>
+            <div class="chart-container" id="earnings-chart"></div>
+          </div>
+          <div class="chart-card">
+            <h3 class="chart-title">{isFreelancer ? 'Projects by Skill' : isClient ? 'Project Status' : 'Projects by Category'}</h3>
+            <div class="chart-container" id="projects-chart"></div>
+          </div>
+        </div>
+
+        <!-- Activity table -->
+        <div class="activity-section mt-8">
+          <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+              <thead class="bg-gray-100 dark:bg-gray-700">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Activity</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Project</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {[1, 2, 3, 4, 5].map((_, i) => (
+                  <tr class="hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{new Date(Date.now() - i * 86400000).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {isFreelancer ? 
+                        ['Payment received', 'Milestone completed', 'Project started', 'Proposal accepted', 'Proposal sent'][i] :
+                      isClient ?
+                        ['Payment released', 'Milestone approved', 'Feedback given', 'Project posted', 'Freelancer hired'][i] :
+                        ['New user joined', 'Project completed', 'Dispute resolved', 'Large transaction', 'New feature launched'][i]
+                      }
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      Project {['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'][i]}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {i === 3 || i === 4 ? '-' : `$${(Math.random() * 1000).toFixed(2)}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Export button -->
+        <div class="flex justify-end mt-8">
+          <button id="export-data" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export Data
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+</div>
+
+<style>
+  .analytics-dashboard {
+    @apply bg-white dark:bg-gray-900 rounded-lg shadow-md p-6;
+  }
+  
+  .dashboard-header {
+    @apply flex flex-col md:flex-row md:justify-between md:items-center pb-4 border-b border-gray-200 dark:border-gray-700;
+  }
+  
+  .stat-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-100 dark:border-gray-700 transition-all hover:shadow-lg;
+  }
+  
+  .stat-card h3 {
+    @apply text-sm font-medium text-gray-500 dark:text-gray-400 mb-2;
+  }
+  
+  .stat-value {
+    @apply text-2xl font-bold text-gray-900 dark:text-white;
+  }
+  
+  .stat-label {
+    @apply text-xs text-gray-500 dark:text-gray-400 mt-1;
+  }
+  
+  .chart-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-100 dark:border-gray-700;
+  }
+  
+  .chart-title {
+    @apply text-base font-medium text-gray-700 dark:text-gray-300 mb-4;
+  }
+  
+  .chart-container {
+    @apply h-64;
+  }
+
+  .loading-spinner {
+    @apply w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+  }
+  
+  .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #4f46e5;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  
+  .hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  // Import Chart.js library
+  import 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js';
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get the page's user type from data attribute
+    const dashboardElement = document.querySelector('.analytics-dashboard');
+    const userTypeFromHeader = document.querySelector('.analytics-dashboard h2')?.textContent?.toLowerCase() || '';
+    const isFreelancer = userTypeFromHeader.includes('freelancer');
+    const isClient = userTypeFromHeader.includes('client');
+    
+    // Sample data for charts
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonth = new Date().getMonth();
+    const last6Months = months.slice(currentMonth - 5 >= 0 ? currentMonth - 5 : (12 + currentMonth - 5), currentMonth + 1);
+    
+    // Generate random data for earnings/spending chart
+    const earningsData = Array(6).fill(0).map(() => Math.floor(Math.random() * 2000 + 1000));
+    const platformFees = earningsData.map(value => value * 0.05); // 5% platform fee
+    
+    // Earnings/Spending chart
+    const earningsChart = document.getElementById('earnings-chart');
+    if (earningsChart) {
+      new Chart(earningsChart, {
+        type: 'line',
+        data: {
+          labels: last6Months,
+          datasets: [
+            {
+              label: isFreelancer ? 'Earnings' : isClient ? 'Spending' : 'Total Revenue',
+              data: earningsData,
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.4,
+              fill: true
+            },
+            ...(isClient ? [] : [{
+              label: isFreelancer ? 'Platform Fees' : 'Platform Profit',
+              data: platformFees,
+              borderColor: 'rgb(139, 92, 246)',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              tension: 0.4,
+              fill: true
+            }])
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Projects chart - different chart types based on user
+    const projectsChart = document.getElementById('projects-chart');
+    if (projectsChart) {
+      if (isFreelancer) {
+        // For freelancer: Skills breakdown
+        new Chart(projectsChart, {
+          type: 'polarArea',
+          data: {
+            labels: ['JavaScript', 'React', 'Node.js', 'UI/UX'],
+            datasets: [{
+              data: [8, 6, 5, 3],
+              backgroundColor: [
+                'rgba(59, 130, 246, 0.7)',
+                'rgba(139, 92, 246, 0.7)',
+                'rgba(217, 70, 239, 0.7)',
+                'rgba(245, 158, 11, 0.7)'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false
+          }
+        });
+      } else if (isClient) {
+        // For client: Project status
+        new Chart(projectsChart, {
+          type: 'doughnut',
+          data: {
+            labels: ['Completed', 'Active', 'Planning'],
+            datasets: [{
+              data: [9, 4, 2],
+              backgroundColor: [
+                'rgba(16, 185, 129, 0.7)',
+                'rgba(59, 130, 246, 0.7)',
+                'rgba(249, 115, 22, 0.7)'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false
+          }
+        });
+      } else {
+        // For admin: Categories breakdown
+        new Chart(projectsChart, {
+          type: 'bar',
+          data: {
+            labels: ['Web Dev', 'Mobile Dev', 'Design', 'Content', 'Marketing'],
+            datasets: [{
+              label: 'Project Count',
+              data: [680, 420, 560, 380, 290],
+              backgroundColor: 'rgba(59, 130, 246, 0.7)'
+            }, {
+              label: 'Value ($K)',
+              data: [310, 240, 180, 95, 70],
+              backgroundColor: 'rgba(139, 92, 246, 0.7)'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      }
+    }
+    
+    // Time range selector functionality
+    const timeRangeSelector = document.getElementById('time-range');
+    if (timeRangeSelector) {
+      timeRangeSelector.addEventListener('change', function() {
+        // In a real app, this would trigger data refresh with the new time range
+        console.log('Time range changed to:', this.value);
+        // Mock loading state
+        const dashboard = document.querySelector('.analytics-dashboard');
+        if (dashboard) {
+          const contentArea = dashboard.querySelector('.grid');
+          if (contentArea) {
+            contentArea.style.opacity = '0.5';
+            setTimeout(() => {
+              contentArea.style.opacity = '1';
+            }, 800);
+          }
+        }
+      });
+    }
+
+    // Export data functionality
+    const exportButton = document.getElementById('export-data');
+    if (exportButton) {
+      exportButton.addEventListener('click', function() {
+        alert('Your analytics data is being exported. You will receive an email with the CSV file shortly.');
+      });
+    }
+  });
+
+  // Analytics data fetching and rendering
+  const loadingSpinner = document.getElementById('loading-spinner');
+  const analyticsContent = document.getElementById('analytics-content');
+  const userId = '${userId}'; // Using the userId prop
+  const userType = '${userType}'; // Using the userType prop
+
+  async function fetchAnalyticsData() {
+    try {
+      // Simulate data loading (replace with actual API call)
+      const response = await fetch(`/api/analytics/user-metrics?userId=${userId}&userType=${userType}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data');
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+      return null;
+    }
+  }
+
+  async function initializeAnalytics() {
+    // Show loading spinner
+    loadingSpinner.classList.remove('hidden');
+    analyticsContent.classList.add('hidden');
+    
+    try {
+      // Fetch data (or use mock data for now)
+      // const data = await fetchAnalyticsData();
+      
+      // For development, simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Hide loading spinner and show content
+      loadingSpinner.classList.add('hidden');
+      analyticsContent.classList.remove('hidden');
+      
+      // Initialize charts using Chart.js
+      initializeCharts();
+    } catch (error) {
+      console.error('Error initializing analytics:', error);
+      
+      // Show error state
+      loadingSpinner.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <p class="text-red-500">Failed to load analytics data. Please try again later.</p>
+      `;
+    }
+  }
+
+  function initializeCharts() {
+    // Initialize Chart.js charts
+    // ...existing chart initialization code...
+  }
+
+  // Start loading analytics data when component mounts
+  document.addEventListener('DOMContentLoaded', initializeAnalytics);
+</script>

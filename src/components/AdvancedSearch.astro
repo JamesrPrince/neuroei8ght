@@ -1,0 +1,539 @@
+---
+// AdvancedSearch.astro - AI-powered search and filtering for projects
+import { createClient } from '@supabase/supabase-js';
+
+// Get Supabase credentials from environment variables
+const supabaseUrl = import.meta.env.SUPABASE_URL;
+const supabaseKey = import.meta.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Get filter parameters from query string or props
+const { 
+  initialFilters = {}, 
+  userSkills = [],
+  showAIRecommendations = true 
+} = Astro.props;
+
+// Define filter categories
+const categories = ['Web Development', 'Mobile Apps', 'UI/UX Design', 'AI/ML', 'Data Science', 'DevOps', 'Other'];
+const experienceLevels = ['Entry', 'Intermediate', 'Expert'];
+const budgetRanges = [
+  { label: 'Under $1,000', min: 0, max: 1000 },
+  { label: '$1,000 - $5,000', min: 1000, max: 5000 },
+  { label: '$5,000 - $10,000', min: 5000, max: 10000 },
+  { label: 'Over $10,000', min: 10000, max: null }
+];
+---
+
+<div class="search-container bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+  <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Find Your Ideal Projects</h2>
+  
+  <div class="search-form">
+    <div class="mb-4">
+      <div class="relative">
+        <input 
+          type="text" 
+          id="search-query"
+          placeholder="Search projects or skills..."
+          class="w-full py-3 px-4 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+        />
+        <button 
+          id="search-button"
+          class="absolute right-3 top-3 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <!-- Category Filter -->
+      <div>
+        <label for="category-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+        <select id="category-filter" class="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+          <option value="">All Categories</option>
+          {categories.map(category => (
+            <option value={category}>{category}</option>
+          ))}
+        </select>
+      </div>
+      
+      <!-- Experience Level Filter -->
+      <div>
+        <label for="experience-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Experience Level</label>
+        <select id="experience-filter" class="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+          <option value="">Any Level</option>
+          {experienceLevels.map(level => (
+            <option value={level}>{level}</option>
+          ))}
+        </select>
+      </div>
+      
+      <!-- Budget Range Filter -->
+      <div>
+        <label for="budget-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Budget Range</label>
+        <select id="budget-filter" class="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+          <option value="">Any Budget</option>
+          {budgetRanges.map(range => (
+            <option value={`${range.min}-${range.max}`}>{range.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+    
+    <!-- Advanced Filters Toggle -->
+    <div class="mb-6">
+      <button 
+        id="toggle-advanced-filters" 
+        class="flex items-center text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+      >
+        <span>Advanced Filters</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </button>
+      
+      <!-- Advanced Filters Content (hidden by default) -->
+      <div id="advanced-filters" class="hidden mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Duration Filter -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Duration</label>
+            <div class="flex space-x-2">
+              <label class="inline-flex items-center">
+                <input type="checkbox" class="form-checkbox" name="duration" value="short" />
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Short Term</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="checkbox" class="form-checkbox" name="duration" value="medium" />
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Medium Term</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="checkbox" class="form-checkbox" name="duration" value="long" />
+                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Long Term</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Skills Filter -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Required Skills</label>
+            <div class="tags-input-container relative">
+              <input 
+                type="text" 
+                id="skills-input" 
+                placeholder="Add skills..."
+                class="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white"
+              />
+              <div id="skills-suggestions" class="hidden absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 shadow-lg rounded-md max-h-60 overflow-auto"></div>
+              <div id="selected-skills" class="flex flex-wrap gap-2 mt-2"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- More advanced filters -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label for="payment-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Type</label>
+            <select id="payment-type" class="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+              <option value="">Any</option>
+              <option value="fixed">Fixed Price</option>
+              <option value="hourly">Hourly Rate</option>
+              <option value="milestone">Milestone Based</option>
+            </select>
+          </div>
+          
+          <div>
+            <label for="location-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location Preference</label>
+            <select id="location-filter" class="w-full p-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white">
+              <option value="">Anywhere</option>
+              <option value="remote">Remote Only</option>
+              <option value="onsite">Onsite</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row justify-between items-center">
+      <div class="flex items-center mb-4 sm:mb-0">
+        <input 
+          type="checkbox" 
+          id="ai-matching" 
+          checked={showAIRecommendations}
+          class="form-checkbox h-5 w-5 text-purple-600" 
+        />
+        <label for="ai-matching" class="ml-2 text-sm text-gray-700 dark:text-gray-300">AI-powered project matching</label>
+      </div>
+      
+      <div class="flex space-x-3">
+        <button 
+          id="clear-filters" 
+          class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 border border-gray-300 dark:border-gray-600 rounded-md"
+        >
+          Clear Filters
+        </button>
+        <button 
+          id="apply-filters" 
+          class="px-4 py-2 text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-md shadow-sm"
+        >
+          Apply Filters
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Recommendations Section -->
+<div id="ai-recommendations" class="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-lg shadow-sm">
+  <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">
+    <span class="inline-flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+      </svg>
+      AI-Recommended for You
+    </span>
+  </h3>
+  <div id="recommendation-chips" class="flex flex-wrap gap-2 mt-2">
+    <!-- Recommendation chips will be populated here by JavaScript -->
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white dark:bg-gray-700 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+      Loading recommendations...
+    </span>
+  </div>
+</div>
+
+<script>
+  // Variables to store our filters
+  let currentFilters = {};
+  let selectedSkills = [];
+  const userSkillsFromProps = JSON.parse('${JSON.stringify(userSkills)}');
+  
+  // Elements
+  const searchQuery = document.getElementById('search-query');
+  const categoryFilter = document.getElementById('category-filter');
+  const experienceFilter = document.getElementById('experience-filter');
+  const budgetFilter = document.getElementById('budget-filter');
+  const toggleAdvancedBtn = document.getElementById('toggle-advanced-filters');
+  const advancedFilters = document.getElementById('advanced-filters');
+  const skillsInput = document.getElementById('skills-input');
+  const selectedSkillsContainer = document.getElementById('selected-skills');
+  const skillsSuggestions = document.getElementById('skills-suggestions');
+  const aiMatchingCheckbox = document.getElementById('ai-matching');
+  const aiRecommendations = document.getElementById('ai-recommendations');
+  const recommendationChips = document.getElementById('recommendation-chips');
+  const clearFiltersBtn = document.getElementById('clear-filters');
+  const applyFiltersBtn = document.getElementById('apply-filters');
+  
+  // Initialize the component
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeFilters();
+    setupEventListeners();
+    if (aiMatchingCheckbox.checked) {
+      fetchAIRecommendations();
+    } else {
+      aiRecommendations.style.display = 'none';
+    }
+  });
+  
+  // Initialize filters from URL or props
+  function initializeFilters() {
+    const initialFiltersObj = JSON.parse('${JSON.stringify(initialFilters)}');
+    
+    if (initialFiltersObj.query) {
+      searchQuery.value = initialFiltersObj.query;
+    }
+    
+    if (initialFiltersObj.category) {
+      categoryFilter.value = initialFiltersObj.category;
+    }
+    
+    if (initialFiltersObj.experienceLevel) {
+      experienceFilter.value = initialFiltersObj.experienceLevel;
+    }
+    
+    if (initialFiltersObj.budgetRange) {
+      budgetFilter.value = initialFiltersObj.budgetRange;
+    }
+    
+    // Add user skills as initial selected skills for better matching
+    if (userSkillsFromProps.length > 0) {
+      selectedSkills = [...userSkillsFromProps];
+      renderSelectedSkills();
+    }
+  }
+  
+  // Set up event listeners
+  function setupEventListeners() {
+    // Toggle advanced filters
+    toggleAdvancedBtn.addEventListener('click', () => {
+      advancedFilters.classList.toggle('hidden');
+      const svg = toggleAdvancedBtn.querySelector('svg');
+      if (advancedFilters.classList.contains('hidden')) {
+        svg.innerHTML = '<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />';
+      } else {
+        svg.innerHTML = '<path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />';
+      }
+    });
+    
+    // Skills input
+    skillsInput.addEventListener('input', debounce(async (e) => {
+      const query = e.target.value.trim();
+      if (query.length > 1) {
+        const suggestions = await fetchSkillSuggestions(query);
+        renderSkillSuggestions(suggestions);
+      } else {
+        skillsSuggestions.classList.add('hidden');
+      }
+    }, 300));
+    
+    // AI matching checkbox
+    aiMatchingCheckbox.addEventListener('change', () => {
+      if (aiMatchingCheckbox.checked) {
+        aiRecommendations.style.display = 'block';
+        fetchAIRecommendations();
+      } else {
+        aiRecommendations.style.display = 'none';
+      }
+    });
+    
+    // Clear filters
+    clearFiltersBtn.addEventListener('click', () => {
+      searchQuery.value = '';
+      categoryFilter.value = '';
+      experienceFilter.value = '';
+      budgetFilter.value = '';
+      
+      // Reset checkboxes
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        if (cb.id !== 'ai-matching') {
+          cb.checked = false;
+        }
+      });
+      
+      // Clear selected skills
+      selectedSkills = [];
+      renderSelectedSkills();
+    });
+    
+    // Apply filters
+    applyFiltersBtn.addEventListener('click', () => {
+      collectFilters();
+      applyFilters();
+    });
+  }
+  
+  // Helper function for debouncing
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+  
+  // Fetch skill suggestions
+  async function fetchSkillSuggestions(query) {
+    try {
+      const response = await fetch(`/api/skills-suggestions?query=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.skills;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching skill suggestions:', error);
+      return [];
+    }
+  }
+  
+  // Render skill suggestions
+  function renderSkillSuggestions(suggestions) {
+    if (suggestions.length === 0) {
+      skillsSuggestions.classList.add('hidden');
+      return;
+    }
+    
+    skillsSuggestions.innerHTML = '';
+    suggestions.forEach(skill => {
+      if (!selectedSkills.includes(skill)) {
+        const suggestionItem = document.createElement('div');
+        suggestionItem.className = 'p-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer';
+        suggestionItem.textContent = skill;
+        suggestionItem.addEventListener('click', () => {
+          addSkill(skill);
+          skillsInput.value = '';
+          skillsSuggestions.classList.add('hidden');
+        });
+        skillsSuggestions.appendChild(suggestionItem);
+      }
+    });
+    
+    skillsSuggestions.classList.remove('hidden');
+  }
+  
+  // Add a skill
+  function addSkill(skill) {
+    if (!selectedSkills.includes(skill)) {
+      selectedSkills.push(skill);
+      renderSelectedSkills();
+    }
+  }
+  
+  // Remove a skill
+  function removeSkill(skill) {
+    selectedSkills = selectedSkills.filter(s => s !== skill);
+    renderSelectedSkills();
+  }
+  
+  // Render selected skills
+  function renderSelectedSkills() {
+    selectedSkillsContainer.innerHTML = '';
+    selectedSkills.forEach(skill => {
+      const skillTag = document.createElement('div');
+      skillTag.className = 'inline-flex items-center px-2 py-1 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm';
+      skillTag.innerHTML = `
+        <span>${skill}</span>
+        <button type="button" class="ml-1 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      `;
+      skillTag.querySelector('button').addEventListener('click', () => removeSkill(skill));
+      selectedSkillsContainer.appendChild(skillTag);
+    });
+  }
+  
+  // Fetch AI recommendations
+  async function fetchAIRecommendations() {
+    try {
+      recommendationChips.innerHTML = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white dark:bg-gray-700 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">Loading recommendations...</span>';
+      
+      // Construct the request with user data
+      const requestBody = {
+        skills: selectedSkills.length > 0 ? selectedSkills : userSkillsFromProps,
+        preferences: currentFilters
+      };
+      
+      const response = await fetch('/api/ai-recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      if (response.ok) {
+        const recommendations = await response.json();
+        renderRecommendations(recommendations);
+      } else {
+        throw new Error('Failed to fetch recommendations');
+      }
+    } catch (error) {
+      console.error('Error fetching AI recommendations:', error);
+      recommendationChips.innerHTML = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white dark:bg-gray-700 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800">Error loading recommendations</span>';
+    }
+  }
+  
+  // Render AI recommendations
+  function renderRecommendations(recommendations) {
+    recommendationChips.innerHTML = '';
+    
+    if (recommendations.length === 0) {
+      recommendationChips.innerHTML = '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600">No recommendations yet</span>';
+      return;
+    }
+    
+    recommendations.forEach(rec => {
+      const chip = document.createElement('button');
+      chip.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white dark:bg-gray-700 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-gray-600 transition-colors';
+      chip.innerHTML = rec.label || rec;
+      chip.addEventListener('click', () => {
+        if (rec.filters) {
+          applyRecommendationFilters(rec.filters);
+        } else if (typeof rec === 'string') {
+          searchQuery.value = rec;
+          applyFiltersBtn.click();
+        }
+      });
+      recommendationChips.appendChild(chip);
+    });
+  }
+  
+  // Apply recommendation filters
+  function applyRecommendationFilters(filters) {
+    if (filters.query) {
+      searchQuery.value = filters.query;
+    }
+    
+    if (filters.category) {
+      categoryFilter.value = filters.category;
+    }
+    
+    if (filters.experienceLevel) {
+      experienceFilter.value = filters.experienceLevel;
+    }
+    
+    if (filters.budgetRange) {
+      budgetFilter.value = filters.budgetRange;
+    }
+    
+    if (filters.skills && filters.skills.length > 0) {
+      selectedSkills = [...filters.skills];
+      renderSelectedSkills();
+    }
+    
+    applyFiltersBtn.click();
+  }
+  
+  // Collect all filters
+  function collectFilters() {
+    currentFilters = {
+      query: searchQuery.value,
+      category: categoryFilter.value,
+      experienceLevel: experienceFilter.value,
+      budgetRange: budgetFilter.value,
+      skills: selectedSkills,
+      paymentType: document.getElementById('payment-type')?.value,
+      location: document.getElementById('location-filter')?.value,
+      duration: Array.from(document.querySelectorAll('input[name="duration"]:checked')).map(cb => cb.value)
+    };
+  }
+  
+  // Apply filters by updating URL
+  function applyFilters() {
+    const urlParams = new URLSearchParams();
+    
+    Object.entries(currentFilters).forEach(([key, value]) => {
+      if (value && (typeof value === 'string' && value !== '' || Array.isArray(value) && value.length > 0)) {
+        if (Array.isArray(value)) {
+          urlParams.set(key, value.join(','));
+        } else {
+          urlParams.set(key, value);
+        }
+      }
+    });
+    
+    // Use client-side navigation or reload the page with new URL
+    window.location.search = urlParams.toString();
+  }
+</script>
+
+<style>
+  .search-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  /* Custom styles for form elements */
+  .form-checkbox {
+    @apply rounded border-gray-300 dark:border-gray-600 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50;
+  }
+</style>

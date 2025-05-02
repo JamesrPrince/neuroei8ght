@@ -1,6 +1,13 @@
 ---
+// Import components
+import LanguageSelector from './LanguageSelector.astro';
+import Notifications from './Notifications.astro';
+
 // Define current path to handle active link styling
 const currentPath = Astro.url.pathname;
+
+// Get the current language from props
+const { currentLanguage = 'en', userId } = Astro.props;
 ---
 
 <header class="header-container">
@@ -33,6 +40,18 @@ const currentPath = Astro.url.pathname;
         </li>
       </ul>
     </nav>
+
+    <div class="header-controls">
+      <!-- Notifications component -->
+      <div class="notifications-control">
+        <Notifications userId={userId} />
+      </div>
+      
+      <!-- Language selector component -->
+      <div class="language-control">
+        <LanguageSelector currentLanguage={currentLanguage} />
+      </div>
+    </div>
   </div>
 </header>
 
@@ -167,6 +186,19 @@ const currentPath = Astro.url.pathname;
     display: none !important;
   }
 
+  /* Header controls (notifications and language selector) */
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: 1rem;
+  }
+
+  .notifications-control, 
+  .language-control {
+    position: relative;
+  }
+
   .mobile-menu-button {
     display: none;
     background: transparent;
@@ -249,6 +281,14 @@ const currentPath = Astro.url.pathname;
       display: block;
       text-align: center;
       width: 100%;
+    }
+    
+    /* Mobile header controls */
+    .header-controls {
+      position: absolute;
+      top: 25px;
+      right: 60px;
+      margin-left: 0;
     }
   }
 </style>

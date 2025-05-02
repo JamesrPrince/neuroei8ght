@@ -1,0 +1,177 @@
+---
+// PaymentSystem.astro - Handles payment processing with Stripe integration
+import { createClient } from '@supabase/supabase-js';
+
+// Get Supabase credentials from environment variables
+const supabaseUrl = import.meta.env.SUPABASE_URL;
+const supabaseKey = import.meta.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const { project, user } = Astro.props;
+---
+
+<div class="payment-container rounded-lg shadow-xl p-6 bg-white dark:bg-gray-800">
+  <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Project Payment</h2>
+  
+  <div class="payment-details mb-6">
+    <div class="flex justify-between mb-2">
+      <span class="text-gray-600 dark:text-gray-300">Project:</span>
+      <span class="font-medium text-gray-800 dark:text-white">{project.title}</span>
+    </div>
+    <div class="flex justify-between mb-2">
+      <span class="text-gray-600 dark:text-gray-300">Total Amount:</span>
+      <span class="font-medium text-gray-800 dark:text-white">${project.budget}</span>
+    </div>
+    <div class="flex justify-between mb-4">
+      <span class="text-gray-600 dark:text-gray-300">Status:</span>
+      <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+        {project.paymentStatus || 'Pending'}
+      </span>
+    </div>
+  </div>
+  
+  <div class="payment-milestones mb-6">
+    <h3 class="text-lg font-semibold mb-3 text-gray-800 dark:text-white">Milestones</h3>
+    <div class="milestone-list space-y-4">
+      {project.milestones?.map((milestone, index) => (
+        <div class="milestone-item p-3 border border-gray-200 dark:border-gray-700 rounded-md">
+          <div class="flex justify-between">
+            <span class="font-medium text-gray-800 dark:text-white">{milestone.title}</span>
+            <span class="text-gray-600 dark:text-gray-300">${milestone.amount}</span>
+          </div>
+          <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">{milestone.description}</div>
+          <div class="flex justify-between items-center mt-2">
+            <span class={`text-sm ${milestone.status === 'Completed' ? 'text-green-600' : 'text-yellow-600'}`}>
+              {milestone.status || 'Pending'}
+            </span>
+            <button 
+              data-milestone-id={milestone.id}
+              class="release-button px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors"
+              disabled={milestone.status === 'Completed'}
+            >
+              Release Payment
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+  
+  <div class="payment-actions">
+    <button id="make-payment" class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg">
+      Make Payment to Escrow
+    </button>
+    <p class="text-sm text-center text-gray-500 dark:text-gray-400 mt-3">
+      Payments are securely held in escrow until milestones are completed
+    </p>
+  </div>
+</div>
+
+<div id="payment-modal" class="hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Complete Your Payment</h3>
+    <div id="payment-form-container" class="mb-4"></div>
+    <div class="flex justify-end">
+      <button id="close-payment-modal" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white">Cancel</button>
+      <button id="submit-payment" class="ml-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md">Pay Now</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { loadStripe } from '@stripe/stripe-js';
+
+  const stripePublicKey = import.meta.env.PUBLIC_STRIPE_KEY;
+  let stripe = null;
+  let elements = null;
+  
+  // Initialize Stripe
+  async function initStripe() {
+    stripe = await loadStripe(stripePublicKey);
+  }
+  
+  // Event listeners
+  document.getElementById('make-payment')?.addEventListener('click', () => {
+    document.getElementById('payment-modal').classList.remove('hidden');
+    setupStripeElements();
+  });
+  
+  document.getElementById('close-payment-modal')?.addEventListener('click', () => {
+    document.getElementById('payment-modal').classList.add('hidden');
+  });
+  
+  // Setup Stripe Elements
+  async function setupStripeElements() {
+    if (!stripe) await initStripe();
+    
+    // Create payment element
+    const response = await fetch('/api/create-payment-intent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        amount: getProjectAmount(),
+        projectId: getProjectId()
+      })
+    });
+    
+    const data = await response.json();
+    elements = stripe.elements({
+      clientSecret: data.clientSecret
+    });
+    
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-form-container');
+  }
+  
+  // Helper functions
+  function getProjectAmount() {
+    // Get project amount from props
+    return parseFloat('${project.budget}') * 100; // Convert to cents
+  }
+  
+  function getProjectId() {
+    return '${project.id}';
+  }
+  
+  // Handle milestone release
+  document.querySelectorAll('.release-button').forEach(button => {
+    button.addEventListener('click', async (e) => {
+      const milestoneId = e.target.getAttribute('data-milestone-id');
+      try {
+        const response = await fetch('/api/release-milestone', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            milestoneId,
+            projectId: getProjectId()
+          })
+        });
+        
+        if (response.ok) {
+          // Update UI
+          e.target.disabled = true;
+          e.target.textContent = 'Released';
+          e.target.previousElementSibling.textContent = 'Completed';
+          e.target.previousElementSibling.classList.replace('text-yellow-600', 'text-green-600');
+        }
+      } catch (error) {
+        console.error('Error releasing milestone payment:', error);
+      }
+    });
+  });
+</script>
+
+<style>
+  .payment-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  #payment-form-container {
+    min-height: 200px;
+  }
+</style>

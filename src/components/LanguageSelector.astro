@@ -1,0 +1,100 @@
+---
+// LanguageSelector.astro - Component for switching between available languages
+import { LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/config';
+import { getAvailableLanguages } from '../i18n/utils';
+
+// Get the current language from props or use default
+const { currentLanguage = DEFAULT_LANGUAGE } = Astro.props;
+
+// Get all available languages
+const availableLanguages = getAvailableLanguages();
+---
+
+<div class="language-selector relative">
+  <button
+    id="language-dropdown-toggle"
+    class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+    aria-label="Select language"
+  >
+    <span class="text-lg">{LANGUAGES[currentLanguage].flag}</span>
+    <span class="font-medium hidden sm:inline">{LANGUAGES[currentLanguage].name}</span>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+  
+  <!-- Language Dropdown -->
+  <div 
+    id="language-dropdown" 
+    class="hidden absolute right-0 mt-2 py-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-10 border border-gray-200 dark:border-gray-700"
+  >
+    {availableLanguages.map(language => (
+      <button
+        class={`w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 ${
+          language.code === currentLanguage ? 'bg-gray-100 dark:bg-gray-700' : ''
+        }`}
+        data-language-code={language.code}
+      >
+        <span class="text-lg">{language.flag}</span>
+        <span class="text-gray-700 dark:text-gray-300">{language.name}</span>
+        {language.code === currentLanguage && (
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500 ml-auto" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        )}
+      </button>
+    ))}
+  </div>
+</div>
+
+<script>
+  // Get elements
+  const dropdownToggle = document.getElementById('language-dropdown-toggle');
+  const dropdown = document.getElementById('language-dropdown');
+  const languageButtons = document.querySelectorAll('[data-language-code]');
+  
+  // Toggle dropdown visibility
+  if (dropdownToggle && dropdown) {
+    dropdownToggle.addEventListener('click', () => {
+      dropdown.classList.toggle('hidden');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (event) => {
+      const isClickInside = dropdownToggle.contains(event.target) || dropdown.contains(event.target);
+      if (!isClickInside && !dropdown.classList.contains('hidden')) {
+        dropdown.classList.add('hidden');
+      }
+    });
+  }
+  
+  // Handle language selection
+  languageButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const langCode = button.getAttribute('data-language-code');
+      if (langCode) {
+        // Save the selected language preference
+        localStorage.setItem('preferredLanguage', langCode);
+        
+        // Reload the page to apply the language change
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('lang', langCode);
+        window.location.href = currentUrl.toString();
+      }
+    });
+  });
+</script>
+
+<style>
+  /* Animation for dropdown */
+  #language-dropdown {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  
+  #language-dropdown:not(.hidden) {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
