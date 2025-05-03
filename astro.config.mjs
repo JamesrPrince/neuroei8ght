@@ -2,6 +2,7 @@
 import { defineConfig } from "astro/config";
 import { loadEnv } from "vite";
 import tailwind from "@astrojs/tailwind";
+import vercel from "@astrojs/vercel/serverless";
 
 // Load environment variables
 const env = loadEnv(process.env.NODE_ENV, process.cwd(), "");
@@ -42,4 +43,6 @@ export default defineConfig({
       },
     }),
   ],
+  output: "server",
+  adapter: vercel(),
 });
