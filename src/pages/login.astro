@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AuthForm from '../components/AuthForm.astro';
+---
+
+<Layout title="Sign In - NeuroEight">
+  <div class="pt-16 pb-24 bg-neutral-50 dark:bg-neutral-900/30 min-h-screen">
+    <div class="container-custom max-w-4xl">
+      <div class="text-center mb-12">
+        <h1 class="font-heading text-4xl md:text-5xl mb-4">Welcome Back</h1>
+        <p class="text-lg text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
+          Sign in to your NeuroEight account to continue with your projects and collaborations.
+        </p>
+      </div>
+      
+      <AuthForm mode="sign-in" redirectUrl="/profile" />
+    </div>
+  </div>
+</Layout>

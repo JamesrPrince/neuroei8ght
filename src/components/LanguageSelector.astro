@@ -31,7 +31,7 @@ const availableLanguages = getAvailableLanguages();
     class="flex items-center space-x-2 px-2 py-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors"
     aria-label="Select language"
   >
-    <span class="text-lg">{typedLanguages[currentLanguage].flag}</span>
+    <img src={typedLanguages[currentLanguage].flag} alt={typedLanguages[currentLanguage].name + ' flag'} class="flag-img" width="24" height="18" />
     <span class="font-medium hidden sm:inline">{typedLanguages[currentLanguage].name}</span>
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -50,7 +50,7 @@ const availableLanguages = getAvailableLanguages();
         }`}
         data-language-code={language.code}
       >
-        <span class="text-lg">{language.flag}</span>
+        <img src={language.flag} alt={language.name + ' flag'} class="flag-img" width="24" height="18" />
         <span class="text-neutral-800 dark:text-neutral-200">{language.name}</span>
         {language.code === currentLanguage && (
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary-500 ml-auto" viewBox="0 0 20 20" fill="currentColor">
@@ -139,5 +139,21 @@ const availableLanguages = getAvailableLanguages();
   #language-dropdown button:last-child {
     border-bottom-left-radius: 0.5rem;
     border-bottom-right-radius: 0.5rem;
+  }
+
+  .flag-emoji {
+    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'EmojiOne Color', 'Twemoji Mozilla', sans-serif;
+    font-size: 1.5rem;
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  .flag-img {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.125rem;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 0.25rem;
   }
 </style>

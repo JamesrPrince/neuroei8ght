@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import AuthForm from '../components/AuthForm.astro';
 import ProjectCard from '../components/ProjectCard.astro';
+import '../assets/styles.css';
 
 const featuredProjects = [
   {
@@ -82,6 +83,7 @@ const stats = [
             src="/hero-illustration.svg" 
             alt="Collaboration Illustration" 
             class="w-full max-w-lg mx-auto dark:opacity-90 drop-shadow-xl"
+            loading="eager"
           />
         </div>
       </div>
@@ -415,6 +417,14 @@ const stats = [
           element.style.transitionDelay = `${delay}ms`;
         }
       });
+    });
+
+    window.addEventListener('DOMContentLoaded', function() {
+      const overlay = document.getElementById('global-loading-overlay');
+      if (overlay) {
+        (overlay as HTMLElement).style.opacity = '0';
+        setTimeout(() => { (overlay as HTMLElement).style.display = 'none'; }, 300);
+      }
     });
   </script>
 </Layout>

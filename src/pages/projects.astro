@@ -1,49 +1,18 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ProjectCard from '../components/ProjectCard.astro';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase.js';
+import '../assets/styles.css';
 
-const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
-
-async function createProject(event) {
-  event.preventDefault();
-  const { title, description, budget } = event.target;
-  const { error } = await supabase.from('projects').insert({
-    title: title.value,
-    description: description.value,
-    budget: parseFloat(budget.value),
-    client_id: supabase.auth.user().id,
-  });
-  if (error) console.error(error);
+// Define types for project and category
+interface Project {
+  title: string;
+  description: string;
+  budget: number;
+  clientName?: string;
 }
 
-let searchResults = [];
-
-async function searchProjects(event) {
-  event.preventDefault();
-  const { keyword, minBudget, maxBudget } = event.target;
-
-  let query = supabase.from('projects').select('*');
-
-  if (keyword.value) {
-    query = query.ilike('title', `%${keyword.value}%`).or(`description.ilike.%${keyword.value}%`);
-  }
-
-  if (minBudget.value) {
-    query = query.gte('budget', parseFloat(minBudget.value));
-  }
-
-  if (maxBudget.value) {
-    query = query.lte('budget', parseFloat(maxBudget.value));
-  }
-
-  const { data, error } = await query;
-  if (data) searchResults = data;
-  if (error) console.error(error);
-}
-
-// Sample project categories
-const categories = [
+const categories: string[] = [
   "Web Development", 
   "Mobile Apps", 
   "UI/UX Design", 
@@ -52,31 +21,94 @@ const categories = [
   "Marketing"
 ];
 
-// Sample featured projects (same as homepage)
-const featuredProjects = [
-  {
-    title: 'E-commerce Website',
-    description: 'A modern e-commerce platform with payment integration.',
-    budget: 5000,
-    clientName: 'John Doe',
-  },
-  {
-    title: 'Portfolio Website',
-    description: 'A sleek portfolio website for showcasing work.',
-    budget: 2000,
-    clientName: 'Jane Smith',
-  },
-  {
-    title: 'Mobile App',
-    description: 'A cross-platform app with real-time features.',
-    budget: 8000,
-    clientName: 'Tech Innovations',
-  },
-];
+let searchResults: Project[] = [];
 
-// For demo purposes, use these as search results if none exist
-if (searchResults.length === 0) {
-  searchResults = featuredProjects;
+async function fetchProjects() {
+  const { data, error } = await supabase.from('projects').select('*');
+  if (data) searchResults = data;
+  if (error) console.error(error);
+}
+
+async function createProject(event: Event) {
+  event.preventDefault();
+  const form = event.target as HTMLFormElement;
+  const title = (form.elements.namedItem('title') as HTMLInputElement)?.value;
+  const description = (form.elements.namedItem('description') as HTMLInputElement)?.value;
+  const budget = (form.elements.namedItem('budget') as HTMLInputElement)?.value;
+  const notification = document.getElementById('project-notification');
+  const submitBtn = document.getElementById('project-submit-btn');
+  const btnText = document.getElementById('project-btn-text');
+  const btnLoading = document.getElementById('project-btn-loading');
+  if (!title || !description || !budget) return;
+  // Show loading
+  if (submitBtn && btnText && btnLoading) {
+    (submitBtn as HTMLButtonElement).disabled = true;
+    btnText.classList.add('hidden');
+    btnLoading.classList.remove('hidden');
+  }
+  if (notification) (notification as HTMLElement).classList.add('hidden');
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from('projects').insert({
+      title,
+      description,
+      budget: parseFloat(budget),
+      client_id: user?.id || null,
+    });
+    if (error) {
+      if (notification) {
+        notification.textContent = 'Error posting project: ' + error.message;
+        notification.classList.remove('hidden');
+        notification.className = 'mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative';
+      }
+      console.error(error);
+    } else {
+      if (notification) {
+        notification.textContent = 'Project posted successfully!';
+        notification.classList.remove('hidden');
+        notification.className = 'mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative';
+      }
+      form.reset();
+      fetchProjects();
+    }
+  } catch (error) {
+    if (notification) {
+      notification.textContent = 'Error posting project.';
+      notification.classList.remove('hidden');
+      notification.className = 'mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative';
+    }
+    console.error('Error posting project:', error);
+  } finally {
+    if (submitBtn && btnText && btnLoading) {
+      (submitBtn as HTMLButtonElement).disabled = false;
+      btnText.classList.remove('hidden');
+      btnLoading.classList.add('hidden');
+    }
+  }
+}
+
+async function searchProjects(event: Event) {
+  event.preventDefault();
+  const form = event.target as HTMLFormElement;
+  const keyword = (form.elements.namedItem('keyword') as HTMLInputElement)?.value;
+  const minBudget = (form.elements.namedItem('minBudget') as HTMLInputElement)?.value;
+  const maxBudget = (form.elements.namedItem('maxBudget') as HTMLInputElement)?.value;
+
+  let query = supabase.from('projects').select('*');
+
+  if (keyword) {
+    query = query.ilike('title', `%${keyword}%`).or(`description.ilike.%${keyword}%`);
+  }
+  if (minBudget) {
+    query = query.gte('budget', parseFloat(minBudget));
+  }
+  if (maxBudget) {
+    query = query.lte('budget', parseFloat(maxBudget));
+  }
+
+  const { data, error } = await query;
+  if (data) searchResults = data;
+  if (error) console.error(error);
 }
 ---
 
@@ -270,11 +302,19 @@ if (searchResults.length === 0) {
               </div>
               
               <div class="form-group">
-                <button type="submit" class="submit-button">
-                  Post Project
+                <button type="submit" id="project-submit-btn" class="submit-button">
+                  <span id="project-btn-text">Post Project</span>
+                  <span id="project-btn-loading" class="hidden">
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Posting...
+                  </span>
                 </button>
               </div>
             </form>
+            <div id="project-notification" class="hidden mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert" aria-live="polite"></div>
           </div>
         </div>
       </div>
@@ -286,7 +326,7 @@ if (searchResults.length === 0) {
         <div class="projects-grid">
           {searchResults.map((project, index) => (
             <div class="project-wrapper" data-aos="fade-up" data-aos-delay={index * 100}>
-              <ProjectCard {...project} />
+              <ProjectCard title={project.title} description={project.description} budget={project.budget} clientName={project.clientName} />
             </div>
           ))}
         </div>
@@ -684,7 +724,7 @@ if (searchResults.length === 0) {
     background-color: white;
     border-radius: 9999px;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var (--primary-color);
     text-decoration: none;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     box-shadow: var(--shadow-md);
@@ -775,23 +815,17 @@ if (searchResults.length === 0) {
 
 <script>
   // Tab switching functionality
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const tabContents = document.querySelectorAll('.tab-content');
+  const tabButtons = Array.from(document.querySelectorAll('.tab-button'));
+  const tabContents = Array.from(document.querySelectorAll('.tab-content'));
 
   tabButtons.forEach(button => {
     button.addEventListener('click', () => {
-      // Remove active class from all buttons
       tabButtons.forEach(btn => btn.classList.remove('active'));
-      
-      // Add active class to clicked button
       button.classList.add('active');
-      
-      // Hide all tab content
       tabContents.forEach(content => content.classList.add('hidden'));
-      
-      // Show selected tab content
       const tabId = button.getAttribute('data-tab');
-      document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+      const tabContent = document.getElementById(`${tabId}-tab`);
+      if (tabContent) tabContent.classList.remove('hidden');
     });
   });
 
@@ -818,5 +852,7 @@ if (searchResults.length === 0) {
         element.style.transitionDelay = `${delay}ms`;
       }
     });
+
+    if (typeof fetchProjects === 'function') fetchProjects();
   });
 </script>

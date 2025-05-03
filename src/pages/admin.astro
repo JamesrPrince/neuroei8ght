@@ -1,8 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient('https://xcnapnpirhhljynxqgas.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjbmFwbnBpcmhobGp5bnhxZ2FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwODgyMzgsImV4cCI6MjA2MTY2NDIzOH0.GUQyYVD3T4AtFFq0A4xD1UG5q5FOb187jCgcZGEgzCY');
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 
 interface User {
   id: string;
@@ -27,9 +25,9 @@ let projects: Project[] = [];
 let disputes: Dispute[] = [];
 
 async function fetchAdminData() {
-  const { data: userData, error: userError } = await supabase.from<User>('users').select('*');
-  const { data: projectData, error: projectError } = await supabase.from<Project>('projects').select('*');
-  const { data: disputeData, error: disputeError } = await supabase.from<Dispute>('disputes').select('*');
+  const { data: userData, error: userError } = await supabase.from('users').select('*');
+  const { data: projectData, error: projectError } = await supabase.from('projects').select('*');
+  const { data: disputeData, error: disputeError } = await supabase.from('disputes').select('*');
 
   if (userData) users = userData;
   if (projectData) projects = projectData;
@@ -41,25 +39,6 @@ async function fetchAdminData() {
 }
 
 fetchAdminData();
-
-// Sample data for demo purposes
-users = [
-  { id: '1', email: 'john@example.com', role: 'client' },
-  { id: '2', email: 'sarah@example.com', role: 'designer' },
-  { id: '3', email: 'mike@example.com', role: 'developer' }
-];
-
-projects = [
-  { title: 'E-commerce Website', budget: 5000, client_id: '1' },
-  { title: 'Mobile App Design', budget: 3500, client_id: '2' },
-  { title: 'Brand Identity', budget: 2000, client_id: '1' }
-];
-
-disputes = [
-  { id: 'd1', description: 'Delayed delivery of project assets', status: 'Open' },
-  { id: 'd2', description: 'Payment dispute for additional features', status: 'Under Review' },
-  { id: 'd3', description: 'Quality concerns with deliverables', status: 'Resolved' }
-];
 
 // Stats for the dashboard
 const totalUsers = users.length;
@@ -787,7 +766,10 @@ const totalRevenue = projects.reduce((sum, project) => sum + project.budget, 0);
       
       // Show selected tab content
       const tabId = button.getAttribute('data-tab');
-      document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+      const tabContent = document.getElementById(`${tabId}-tab`);
+      if (tabContent) {
+        tabContent.classList.remove('hidden');
+      }
     });
   });
 
@@ -810,7 +792,7 @@ const totalRevenue = projects.reduce((sum, project) => sum + project.budget, 0);
       
       // Apply delay if specified
       const delay = element.getAttribute('data-aos-delay');
-      if (delay) {
+      if (delay && element instanceof HTMLElement) {
         element.style.transitionDelay = `${delay}ms`;
       }
     });

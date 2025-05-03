@@ -10,6 +10,20 @@ const currentPath = Astro.url.pathname;
 const { currentLanguage = 'en', userId } = Astro.props;
 ---
 
+<script>
+  // Set theme before page renders to avoid flash of incorrect theme
+  (function() {
+    try {
+      const theme = localStorage.getItem('color-theme');
+      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch (e) {}
+  })();
+</script>
+
 <header class="fixed top-0 left-0 w-full z-50 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-lg shadow-sm transition-all duration-200">
   <div class="container-custom mx-auto">
     <div class="flex justify-between items-center h-20">

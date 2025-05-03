@@ -28,6 +28,7 @@ const direction = getLanguageDirection(currentLang.code);
 
 // Load translations for the selected language
 const translations = await loadTranslations(currentLang.code);
+console.log('Loaded translations structure:', Object.keys(translations));
 
 // SEO metadata with defaults
 const {
@@ -36,7 +37,30 @@ const {
   ogImage = "/og-image.jpg",
   canonicalUrl = Astro.url.pathname
 } = Astro.props;
+
+// Helper function to safely get nested translation values
+function getTranslation(path: string, fallback: string): string {
+  const keys = path.split('.');
+  let value = translations;
+  
+  for (const key of keys) {
+    value = value?.[key];
+    if (value === undefined) return fallback;
+  }
+  
+  return typeof value === 'string' ? value : fallback;
+}
 ---
+
+<div id="global-loading-overlay" style="position:fixed;z-index:9999;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.95);transition:opacity 0.3s;">
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <svg class="animate-spin" style="width:3rem;height:3rem;color:#6366f1;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    <span style="margin-top:1rem;color:#6366f1;font-weight:600;">Loading...</span>
+  </div>
+</div>
 
 <!doctype html>
 <html lang={currentLang.locale.split('-')[0]} dir={direction} class="scroll-smooth">
@@ -72,7 +96,7 @@ const {
 		<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 		
 		<!-- Language alternates for SEO -->
-		{Object.values(Languages).map(language => (
+		{Object.values(typedLanguages).map(language => (
 			<link 
 				rel="alternate" 
 				hreflang={language.locale.split('-')[0]} 
@@ -120,6 +144,15 @@ const {
 				document.documentElement.classList.add('loaded');
 				}
 			});
+		</script>
+		<script>
+		  window.addEventListener('DOMContentLoaded', function() {
+		    const overlay = document.getElementById('global-loading-overlay');
+		    if (overlay) {
+		      overlay.style.opacity = '0';
+		      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+		    }
+		  });
 		</script>
 	</head>
 	<body class="min-h-screen flex flex-col bg-white dark:bg-neutral-900 dark:text-neutral-100 transition-colors duration-300">
@@ -240,12 +273,12 @@ const {
 						<ul class="space-y-2">
 							<li>
 								<a href="/about" class="inline-block py-1 text-neutral-400 hover:text-white transition-colors">
-									{translations?.common?.footer?.about || 'About Us'}
+										{getTranslation('common.footer.about', 'About Us')}
 								</a>
 							</li>
 							<li>
 								<a href="/contact" class="inline-block py-1 text-neutral-400 hover:text-white transition-colors">
-									{translations?.common?.footer?.contact || 'Contact Us'}
+										{getTranslation('common.footer.contact', 'Contact Us')}
 								</a>
 							</li>
 							<li>
@@ -266,11 +299,11 @@ const {
 					<div class="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
 						<div class="flex flex-wrap gap-4 text-sm text-neutral-500">
 							<a href="/terms" class="hover:text-white transition-colors">
-								{translations?.common?.footer?.terms || 'Terms of Service'}
+								{getTranslation('common.footer.terms', 'Terms of Service')}
 							</a>
 							<span class="text-neutral-700">•</span>
 							<a href="/privacy" class="hover:text-white transition-colors">
-								{translations?.common?.footer?.privacy || 'Privacy Policy'}
+								{getTranslation('common.footer.privacy', 'Privacy Policy')}
 							</a>
 							<span class="text-neutral-700">•</span>
 							<a href="/sitemap" class="hover:text-white transition-colors">
@@ -279,8 +312,7 @@ const {
 						</div>
 						
 						<div class="text-sm text-neutral-500">
-							{translations?.common?.footer?.copyright?.replace('{{year}}', new Date().getFullYear()) || 
-							`© ${new Date().getFullYear()} NeuroEight Technology. All rights reserved.`}
+							{getTranslation('common.footer.copyright', `© ${new Date().getFullYear()} NeuroEight Technology. All rights reserved.`).replace('{{year}}', new Date().getFullYear())}
 						</div>
 					</div>
 				</div>

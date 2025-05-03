@@ -5,31 +5,31 @@ export const LANGUAGES = {
     code: "en",
     name: "English",
     locale: "en-US",
-    flag: "🇺🇸",
+    flag: "/src/assets/flags/us.svg",
   },
   es: {
     code: "es",
     name: "Español",
     locale: "es-ES",
-    flag: "🇪🇸",
+    flag: "/src/assets/flags/es.svg",
   },
   fr: {
     code: "fr",
     name: "Français",
     locale: "fr-FR",
-    flag: "🇫🇷",
+    flag: "/src/assets/flags/fr.svg",
   },
   de: {
     code: "de",
     name: "Deutsch",
     locale: "de-DE",
-    flag: "🇩🇪",
+    flag: "/src/assets/flags/de.svg",
   },
   ja: {
     code: "ja",
     name: "日本語",
     locale: "ja-JP",
-    flag: "🇯🇵",
+    flag: "/src/assets/flags/jp.svg",
   },
 };
 

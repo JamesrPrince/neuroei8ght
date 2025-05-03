@@ -1,6 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Analytics from '../components/Analytics.astro';
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
+import '../assets/styles.css';
 
 // Define interface for profile data
 interface Profile {
@@ -13,6 +15,7 @@ interface Profile {
   email: string;
   location: string;
   website: string;
+  availability?: string; // Added availability as optional property
 }
 
 // Initialize empty profile
@@ -50,6 +53,9 @@ let reviews = [
   }
 ];
 
+// Create a reactive variable for Astro client directives
+const profileData = { ...profile };
+
 async function fetchProfile() {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -76,6 +82,18 @@ async function fetchReviews() {
   }
 }
 
+function showNotification(message: string, type: 'success' | 'error') {
+  const notification = document.getElementById('notification');
+  if (notification) {
+    notification.textContent = message;
+    notification.style.display = 'block';
+    notification.className = `notification ${type}`;
+    setTimeout(() => {
+      notification.style.display = 'none';
+    }, 4000);
+  }
+}
+
 async function updateProfile(event: SubmitEvent) {
   event.preventDefault();
   try {
@@ -85,9 +103,15 @@ async function updateProfile(event: SubmitEvent) {
         ...profile,
         id: user.id
       });
-      if (error) console.error(error);
+      if (error) {
+        showNotification('Error updating profile: ' + error.message, 'error');
+        console.error(error);
+      } else {
+        showNotification('Profile updated successfully!', 'success');
+      }
     }
   } catch (error) {
+    showNotification('Error updating profile.', 'error');
     console.error('Error updating profile:', error);
   }
 }
@@ -97,28 +121,40 @@ async function submitReview(event: SubmitEvent) {
   const target = event.target as HTMLFormElement;
   const ratingInput = target.rating as HTMLInputElement;
   const commentInput = target.comment as HTMLTextAreaElement;
+  const projectSelect = target.project as HTMLSelectElement;
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      const selectedProjectIdx = parseInt(projectSelect.value);
+      const selectedProject = portfolioProjects[selectedProjectIdx];
       const { error } = await supabase.from('ratings').insert({
         reviewer_id: user.id,
-        reviewee_id: 'reviewee-id-placeholder', // Replace with actual reviewee ID
+        reviewee_id: userId, // Use the profile's userId
         rating: parseInt(ratingInput.value),
         comment: commentInput.value,
-        project_id: 'project-id-placeholder', // Replace with actual project ID
+        project_id: selectedProject ? selectedProject.title : null
       });
-
-      if (error) console.error(error);
-      fetchReviews();
+      if (error) {
+        showNotification('Error submitting review: ' + error.message, 'error');
+        console.error(error);
+      } else {
+        showNotification('Review submitted successfully!', 'success');
+        target.reset();
+        fetchReviews();
+      }
     }
   } catch (error) {
+    showNotification('Error submitting review.', 'error');
     console.error('Error submitting review:', error);
   }
 }
 
-fetchProfile();
-fetchReviews();
+// Modified to use client:load for form handling
+if (isSupabaseConfigured()) {
+  fetchProfile();
+  fetchReviews();
+}
 
 // Calculate average rating
 const averageRating = reviews.length > 0
@@ -247,6 +283,8 @@ const userId = '123'; // This would normally be fetched from the authenticated u
               <button class="tab-button" data-tab="analytics">Analytics</button>
             </div>
 
+            <div id="notification" class="notification" style="display:none;" aria-live="polite"></div>
+
             <div class="tab-content" id="about-tab">
               <div class="content-card" data-aos="fade-up">
                 <h3 class="card-title">About Me</h3>
@@ -301,13 +339,13 @@ const userId = '123'; // This would normally be fetched from the authenticated u
 
               <div class="content-card" data-aos="fade-up" data-aos-delay="100">
                 <h3 class="card-title">Leave a Review</h3>
-                <form onsubmit="submitReview" class="review-form">
+                <form onsubmit="submitReview" class="review-form" aria-label="Leave a Review">
                   <div class="form-group">
                     <label for="rating">Rating</label>
-                    <div class="rating-select">
+                    <div class="rating-select" role="radiogroup" aria-labelledby="rating">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <label class="rating-label">
-                          <input type="radio" name="rating" value={i + 1} required />
+                        <label class="rating-label" for={`rating-${i+1}`}> 
+                          <input type="radio" id={`rating-${i+1}`} name="rating" value={i + 1} required aria-checked="false" />
                           <svg class="star" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                             <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
                           </svg>
@@ -316,8 +354,17 @@ const userId = '123'; // This would normally be fetched from the authenticated u
                     </div>
                   </div>
                   <div class="form-group">
+                    <label for="project">Project</label>
+                    <select id="project" name="project" class="form-control" required aria-required="true">
+                      <option value="">Select a project</option>
+                      {portfolioProjects.map((project, idx) => (
+                        <option value={idx}>{project.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div class="form-group">
                     <label for="comment">Your Review</label>
-                    <textarea id="comment" name="comment" class="form-control" rows="4" placeholder="Share your experience working with this professional" required></textarea>
+                    <textarea id="comment" name="comment" class="form-control" rows="4" placeholder="Share your experience working with this professional" required aria-required="true"></textarea>
                   </div>
                   <div class="form-group">
                     <button type="submit" class="submit-button">
@@ -338,7 +385,7 @@ const userId = '123'; // This would normally be fetched from the authenticated u
             <div class="tab-content hidden" id="edit-tab">
               <div class="content-card" data-aos="fade-up">
                 <h3 class="card-title">Edit Profile</h3>
-                <form onsubmit="updateProfile" class="profile-form">
+                <form onsubmit="updateProfile" class="profile-form" aria-label="Edit Profile">
                   <div class="form-group">
                     <label for="name">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -859,7 +906,7 @@ const userId = '123'; // This would normally be fetched from the authenticated u
   .portfolio-item {
     position: relative;
     overflow: hidden;
-    border-radius: var(--border-radius-md);
+    border-radius: var (--border-radius-md);
     box-shadow: var(--shadow-sm);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
@@ -1065,6 +1112,27 @@ const userId = '123'; // This would normally be fetched from the authenticated u
     color: #f59e0b;
   }
 
+  .notification {
+    margin: 1rem 0;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    background: #f3f4f6;
+    color: #1e293b;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s;
+  }
+  .notification.success {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #10b981;
+  }
+  .notification.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #ef4444;
+  }
+
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -1112,26 +1180,55 @@ const userId = '123'; // This would normally be fetched from the authenticated u
   const tabButtons = document.querySelectorAll('.tab-button');
   const tabContents = document.querySelectorAll('.tab-content');
 
+  function activateTab(tabId: string) {
+    // Hide all tab contents
+    tabContents.forEach(content => {
+      content.classList.add('hidden');
+    });
+    // Show the selected tab content
+    const selectedTab = document.getElementById(`${tabId}-tab`);
+    if (selectedTab) {
+      selectedTab.classList.remove('hidden');
+    }
+    // Update active state of tab buttons
+    tabButtons.forEach(button => {
+      const btn = button as HTMLElement;
+      if (btn.dataset.tab === tabId) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    // Save the active tab in localStorage
+    localStorage.setItem('activeProfileTab', tabId);
+  }
+
+  // Add click event to tab buttons
   tabButtons.forEach(button => {
     button.addEventListener('click', () => {
-      // Remove active class from all buttons
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      
-      // Add active class to clicked button
-      button.classList.add('active');
-      
-      // Hide all tab content
-      tabContents.forEach(content => content.classList.add('hidden'));
-      
-      // Show selected tab content
-      const tabId = button.getAttribute('data-tab');
-      const selectedTab = document.getElementById(`${tabId}-tab`);
-      if (selectedTab) {
-        selectedTab.classList.remove('hidden');
-      }
+      const btn = button as HTMLElement;
+      const tabId = btn.dataset.tab as string;
+      if (tabId) activateTab(tabId);
     });
   });
 
+  // Check if there's a saved active tab in localStorage
+  const savedTab = localStorage.getItem('activeProfileTab');
+  if (savedTab) {
+    activateTab(savedTab);
+  } else {
+    activateTab('overview');
+  }
+
+  // Check if there's a tab parameter in the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabParam = urlParams.get('tab');
+  if (tabParam) {
+    activateTab(tabParam);
+  }
+</script>
+
+<script>
   // Simple AOS (Animate On Scroll) implementation
   document.addEventListener('DOMContentLoaded', () => {
     const animatedElements = document.querySelectorAll('[data-aos]');
@@ -1172,7 +1269,7 @@ const userId = '123'; // This would normally be fetched from the authenticated u
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     
-    function activateTab(tabId) {
+    function activateTab(tabId: string) {
       // Hide all tab contents
       tabContents.forEach(content => {
         content.classList.add('hidden');
@@ -1186,10 +1283,11 @@ const userId = '123'; // This would normally be fetched from the authenticated u
       
       // Update active state of tab buttons
       tabButtons.forEach(button => {
-        if (button.dataset.tab === tabId) {
-          button.classList.add('active');
+        const btn = button as HTMLElement;
+        if (btn.dataset.tab === tabId) {
+          btn.classList.add('active');
         } else {
-          button.classList.remove('active');
+          btn.classList.remove('active');
         }
       });
 
@@ -1200,7 +1298,8 @@ const userId = '123'; // This would normally be fetched from the authenticated u
     // Add click event to tab buttons
     tabButtons.forEach(button => {
       button.addEventListener('click', () => {
-        const tabId = button.dataset.tab;
+        const btn = button as HTMLElement;
+        const tabId = btn.dataset.tab as string;
         activateTab(tabId);
       });
     });

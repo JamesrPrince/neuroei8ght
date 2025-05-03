@@ -8,14 +8,18 @@ const {
   showSocial = true,
 } = Astro.props;
 
+// Get role from URL parameter if available
+const url = Astro.url;
+const urlRole = url.searchParams.get('role');
+
 // Page title and button text based on mode
-const titles = {
+const titles: Record<'sign-up' | 'sign-in' | 'reset-password', string> = {
   'sign-up': 'Create an Account',
   'sign-in': 'Welcome Back',
   'reset-password': 'Reset Your Password'
 };
 
-const buttonTexts = {
+const buttonTexts: Record<'sign-up' | 'sign-in' | 'reset-password', string> = {
   'sign-up': 'Sign Up',
   'sign-in': 'Sign In',
   'reset-password': 'Send Reset Link'
@@ -89,10 +93,11 @@ const showSignUpLink = mode === 'sign-in';
           name="role" 
           class="form-input dark:bg-neutral-700 dark:border-neutral-600 dark:text-white" 
           required={mode === 'sign-up'}
+          data-url-role={urlRole || ''}
         >
-          <option value="" disabled selected>Choose your role</option>
-          <option value="client">Client - I need projects completed</option>
-          <option value="freelancer">Freelancer - I offer my services</option>
+          <option value="" disabled selected={!urlRole}>Choose your role</option>
+          <option value="client" selected={urlRole === 'client'}>Client - I need projects completed</option>
+          <option value="freelancer" selected={urlRole === 'freelancer'}>Freelancer - I offer my services</option>
         </select>
       </div>
     )}
@@ -161,6 +166,8 @@ const showSignUpLink = mode === 'sign-in';
     </div>
   )}
   
+  <!-- Notification area for feedback -->
+  <div id="notification" class="hidden mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert" aria-live="polite"></div>
   <!-- Error alert - hidden by default -->
   <div id="error-alert" class="hidden mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
     <span id="error-message" class="block sm:inline"></span>
@@ -168,15 +175,30 @@ const showSignUpLink = mode === 'sign-in';
 </div>
 
 <script>
+  declare global {
+    interface Window {
+      supabase: any;
+    }
+  }
+
   // DOM elements
-  const form = document.getElementById('auth-form');
-  const submitBtn = document.getElementById('submit-btn');
+  const form = document.getElementById('auth-form') as HTMLFormElement | null;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
   const buttonText = document.getElementById('button-text');
   const buttonLoading = document.getElementById('button-loading');
   const errorAlert = document.getElementById('error-alert');
   const errorMessage = document.getElementById('error-message');
   const googleAuthBtn = document.getElementById('google-auth');
   const githubAuthBtn = document.getElementById('github-auth');
+  const roleSelect = document.getElementById('role') as HTMLSelectElement | null;
+  
+  // Set role from URL parameter if it exists
+  if (roleSelect) {
+    const urlRole = roleSelect.getAttribute('data-url-role');
+    if (urlRole) {
+      roleSelect.value = urlRole;
+    }
+  }
   
   // Add event listener for form submission
   if (form) {
@@ -185,12 +207,12 @@ const showSignUpLink = mode === 'sign-in';
       
       // Get form data
       const formData = new FormData(form);
-      const mode = formData.get('mode');
-      const email = formData.get('email');
-      const password = formData.get('password');
-      const name = formData.get('name');
-      const role = formData.get('role');
-      const redirectUrl = formData.get('redirectUrl');
+      const mode = formData.get('mode') as 'sign-up' | 'sign-in' | 'reset-password';
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
+      const name = formData.get('name') as string;
+      const role = formData.get('role') as string;
+      const redirectUrl = formData.get('redirectUrl') as string;
       
       // Show loading state
       if (submitBtn && buttonText && buttonLoading) {
@@ -202,11 +224,14 @@ const showSignUpLink = mode === 'sign-in';
       try {
         // Hide any previous error
         if (errorAlert) errorAlert.classList.add('hidden');
+        // Hide previous notification
+        const notification = document.getElementById('notification');
+        if (notification) notification.classList.add('hidden');
         
         // Handle different authentication modes
         if (mode === 'sign-up') {
           // Implement sign up logic
-          const { data, error } = await supabase.auth.signUp({
+          const { data, error } = await window.supabase.auth.signUp({
             email,
             password,
             options: {
@@ -224,7 +249,7 @@ const showSignUpLink = mode === 'sign-in';
           
         } else if (mode === 'sign-in') {
           // Implement sign in logic
-          const { data, error } = await supabase.auth.signInWithPassword({
+          const { data, error } = await window.supabase.auth.signInWithPassword({
             email,
             password
           });
@@ -236,20 +261,20 @@ const showSignUpLink = mode === 'sign-in';
           
         } else if (mode === 'reset-password') {
           // Implement password reset logic
-          const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+          const { data, error } = await window.supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/reset-password-confirmation`
           });
           
           if (error) throw error;
           
           // Show success message
-          alert('Check your email for a password reset link');
+          showNotification('Check your email for a password reset link.');
         }
         
       } catch (error) {
         // Display error
         if (errorAlert && errorMessage) {
-          errorMessage.textContent = error.message || 'An error occurred during authentication.';
+          errorMessage.textContent = (error instanceof Error ? error.message : 'An error occurred during authentication.');
           errorAlert.classList.remove('hidden');
         }
         console.error('Authentication error:', error);
@@ -268,7 +293,7 @@ const showSignUpLink = mode === 'sign-in';
   if (googleAuthBtn) {
     googleAuthBtn.addEventListener('click', async () => {
       try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        const { data, error } = await window.supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
             redirectTo: `${window.location.origin}/auth/callback`
@@ -285,7 +310,7 @@ const showSignUpLink = mode === 'sign-in';
   if (githubAuthBtn) {
     githubAuthBtn.addEventListener('click', async () => {
       try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        const { data, error } = await window.supabase.auth.signInWithOAuth({
           provider: 'github',
           options: {
             redirectTo: `${window.location.origin}/auth/callback`
@@ -297,5 +322,16 @@ const showSignUpLink = mode === 'sign-in';
         console.error('GitHub auth error:', error);
       }
     });
+  }
+
+  function showNotification(message: string) {
+    const notification = document.getElementById('notification');
+    if (notification) {
+      notification.textContent = message;
+      notification.classList.remove('hidden');
+      setTimeout(() => {
+        notification.classList.add('hidden');
+      }, 4000);
+    }
   }
 </script>
