@@ -4,6 +4,9 @@ import '../assets/styles.css';
 import { DEFAULT_LANGUAGE, LANGUAGES } from '../i18n/config';
 import { getUserPreferredLanguage, loadTranslations, getLanguageDirection } from '../i18n/utils';
 
+// Import CSS content directly for inline fallback
+import cssStyles from '../assets/styles.css?raw';
+
 // Define TypeScript interfaces for language data
 interface LanguageInfo {
   code: string;
@@ -70,6 +73,9 @@ function getTranslation(path: string, fallback: string): string {
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		
+		<!-- Inline critical CSS as fallback -->
+		<style is:inline set:html={cssStyles}></style>
 		
 		 <!-- SEO Meta Tags -->
 		<meta name="description" content={metaDescription} />

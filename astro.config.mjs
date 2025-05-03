@@ -20,6 +20,26 @@ export default defineConfig({
         env.STRIPE_SECRET_KEY || ""
       ),
     },
+    css: {
+      // Improve CSS processing
+      devSourcemap: true,
+      postcss: {
+        plugins: [require("tailwindcss"), require("autoprefixer")],
+      },
+    },
   },
-  integrations: [tailwind()],
+  build: {
+    // Use standard output structure
+    format: "file",
+  },
+  // Use inlineStylesheets to ensure CSS is embedded in HTML by default
+  inlineStylesheets: "auto",
+  integrations: [
+    tailwind({
+      // Ensure Tailwind can find all content
+      config: {
+        applyBaseStyles: false,
+      },
+    }),
+  ],
 });
