@@ -1,11 +1,12 @@
 ---
 import Header from '../components/Header.astro';
-import '../assets/styles.css';
+import '../assets/styles/global.css';
 import { DEFAULT_LANGUAGE, LANGUAGES } from '../i18n/config';
 import { getUserPreferredLanguage, loadTranslations, getLanguageDirection } from '../i18n/utils';
 
 // Import CSS content directly for inline fallback
 import cssStyles from '../assets/styles.css?raw';
+// We'll load particles.js via client script tag instead of import
 
 // Define TypeScript interfaces for language data
 interface LanguageInfo {
@@ -100,6 +101,10 @@ function getTranslation(path: string, fallback: string): string {
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+		
+		<!-- Particles.js Library for animations -->
+		<script is:inline src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+		<script is:inline src="/assets/particles.js"></script>
 		
 		<!-- Language alternates for SEO -->
 		{Object.values(typedLanguages).map(language => (
