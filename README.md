@@ -16,36 +16,82 @@ A modern freelance marketplace platform built with Astro, Supabase, and modern U
 
 ## 🚀 Project Structure
 
+Update the project structure to reflect the current state:
+
 ```text
 /
 ├── public/
+│   ├── assets/
+│   │   └── particles.js
 │   └── favicon.svg
 ├── src/
 │   ├── assets/
+│   │   ├── flags/             # SVG flags for language selector
+│   │   ├── styles/            # Global CSS
 │   │   ├── astro.svg
-│   │   ├── background.svg
-│   │   └── styles.css
-│   ├── components/
-│   │   ├── Analytics.astro
+│   │   └── background.svg
+│   ├── components/            # Reusable Astro/UI components
 │   │   ├── AuthForm.astro
-│   │   ├── Chat.astro
 │   │   ├── Header.astro
+│   │   ├── LanguageSelector.astro
+│   │   ├── Notifications.astro
 │   │   ├── ProjectCard.astro
-│   │   └── Welcome.astro
-│   ├── layouts/
+│   │   └── ... (and others)
+│   ├── i18n/                  # Internationalization setup
+│   │   ├── locales/           # Translation JSON files (en, es, de, fr, ja)
+│   │   ├── config.ts
+│   │   └── utils.ts
+│   ├── layouts/               # Main page layout
 │   │   └── Layout.astro
-│   └── pages/
-│       ├── admin.astro
-│       ├── index.astro
-│       ├── profile.astro
-│       └── projects.astro
-├── astro.config.mjs
-├── Dockerfile
+│   ├── lib/                   # Core libraries/utilities (e.g., Supabase client)
+│   │   └── supabase.ts
+│   ├── pages/                 # Astro pages and API endpoints
+│   │   ├── api/               # Server-side API routes organized by feature
+│   │   │   ├── analytics/
+│   │   │   ├── notifications/
+│   │   │   ├── payments/
+│   │   │   ├── projects/
+│   │   │   ├── recommendations/
+│   │   │   └── users/
+│   │   ├── admin.astro
+│   │   ├── index.astro
+│   │   ├── login.astro
+│   │   ├── profile.astro
+│   │   ├── projects.astro
+│   │   └── signup.astro
+│   └── stores/                # Zustand state management stores
+│       └── userStore.ts
+├── tests/                   # (Optional location for tests if not co-located)
+├── astro.config.mjs         # Astro configuration
+├── tailwind.config.js       # Tailwind CSS configuration
+├── tsconfig.json            # TypeScript configuration
+├── vitest.config.ts         # Vitest configuration
 ├── package.json
-├── tailwind.config.js
-├── tsconfig.json
-└── vercel.json
+├── .env.example             # Example environment variables
+├── .gitignore
+├── Dockerfile               # Docker configuration
+└── README.md                # This file
 ```
+
+## 🏁 Getting Started
+
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd neuroei8gt
+    ```
+2.  **Set up environment variables:**
+    - Copy the example environment file: `cp .env.example .env`
+    - Edit the `.env` file and add your actual Supabase and Stripe API keys.
+3.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    The application should now be running at `http://localhost:4321`.
 
 ## 🧞 Commands
 
@@ -62,9 +108,14 @@ All commands are run from the root of the project, from a terminal:
 
 ## 🔧 Tech Stack
 
-- **Frontend**: Astro, TypeScript, Modern CSS with variables and animations
-- **Backend**: Supabase for authentication, database, and storage
-- **Deployment**: Docker containerization, Vercel hosting
+- **Framework**: [Astro](https://astro.build/)
+- **UI**: [Tailwind CSS](https://tailwindcss.com/), Headless UI (implied by Tailwind usage)
+- **Backend & DB**: [Supabase](https://supabase.com/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Language**: TypeScript
+- **Testing**: [Vitest](https://vitest.dev/)
+- **Internationalization**: Custom setup (see `src/i18n/`)
+- **Deployment**: Docker, Vercel
 
 ## 📚 Pages
 
@@ -85,12 +136,19 @@ docker run -p 4321:4321 neuroei8gt
 
 ## 🔒 Environment Variables
 
-To run this project, you need to set up the following environment variables:
+To run this project, you need to set up the following environment variables. Create a `.env` file in the project root (copy from `.env.example`) and add your keys:
 
+```dotenv
+# Supabase Configuration
+SUPABASE_URL=your_supabase_url_here
+SUPABASE_KEY=your_supabase_anon_key_here
+
+# Stripe Configuration (ensure PUBLIC_ key is safe for client-side)
+PUBLIC_STRIPE_KEY=your_stripe_public_key_here
+STRIPE_SECRET_KEY=your_stripe_secret_key_here
 ```
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-```
+
+See the `.env.example` file for a template. **Never commit your `.env` file!**
 
 ## 🌟 Future Enhancements
 

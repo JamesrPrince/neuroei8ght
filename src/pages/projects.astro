@@ -1,114 +1,126 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import { supabase } from '../lib/supabase.js';
-import '../assets/styles.css';
+import Layout from '../layouts/Layout.astro'
+import ProjectCard from '../components/ProjectCard.astro'
+import { supabase } from '../lib/supabase.js'
+import '../assets/styles/global.css'
 
 // Define types for project and category
 interface Project {
-  title: string;
-  description: string;
-  budget: number;
-  clientName?: string;
+  title: string
+  description: string
+  budget: number
+  clientName?: string
 }
 
 const categories: string[] = [
-  "Web Development", 
-  "Mobile Apps", 
-  "UI/UX Design", 
-  "Graphic Design", 
-  "E-commerce", 
-  "Marketing"
-];
+  'Web Development',
+  'Mobile Apps',
+  'UI/UX Design',
+  'Graphic Design',
+  'E-commerce',
+  'Marketing',
+]
 
-let searchResults: Project[] = [];
+let searchResults: Project[] = []
 
 async function fetchProjects() {
-  const { data, error } = await supabase.from('projects').select('*');
-  if (data) searchResults = data;
-  if (error) console.error(error);
+  const { data, error } = await supabase.from('projects').select('*')
+  if (data) searchResults = data
+  if (error) console.error(error)
 }
 
 async function createProject(event: Event) {
-  event.preventDefault();
-  const form = event.target as HTMLFormElement;
-  const title = (form.elements.namedItem('title') as HTMLInputElement)?.value;
-  const description = (form.elements.namedItem('description') as HTMLInputElement)?.value;
-  const budget = (form.elements.namedItem('budget') as HTMLInputElement)?.value;
-  const notification = document.getElementById('project-notification');
-  const submitBtn = document.getElementById('project-submit-btn');
-  const btnText = document.getElementById('project-btn-text');
-  const btnLoading = document.getElementById('project-btn-loading');
-  if (!title || !description || !budget) return;
+  event.preventDefault()
+  const form = event.target as HTMLFormElement
+  const title = (form.elements.namedItem('title') as HTMLInputElement)?.value
+  const description = (
+    form.elements.namedItem('description') as HTMLInputElement
+  )?.value
+  const budget = (form.elements.namedItem('budget') as HTMLInputElement)?.value
+  const notification = document.getElementById('project-notification')
+  const submitBtn = document.getElementById('project-submit-btn')
+  const btnText = document.getElementById('project-btn-text')
+  const btnLoading = document.getElementById('project-btn-loading')
+  if (!title || !description || !budget) return
   // Show loading
   if (submitBtn && btnText && btnLoading) {
-    (submitBtn as HTMLButtonElement).disabled = true;
-    btnText.classList.add('hidden');
-    btnLoading.classList.remove('hidden');
+    ;(submitBtn as HTMLButtonElement).disabled = true
+    btnText.classList.add('hidden')
+    btnLoading.classList.remove('hidden')
   }
-  if (notification) (notification as HTMLElement).classList.add('hidden');
+  if (notification) (notification as HTMLElement).classList.add('hidden')
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     const { error } = await supabase.from('projects').insert({
       title,
       description,
       budget: parseFloat(budget),
       client_id: user?.id || null,
-    });
+    })
     if (error) {
       if (notification) {
-        notification.textContent = 'Error posting project: ' + error.message;
-        notification.classList.remove('hidden');
-        notification.className = 'mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative';
+        notification.textContent = 'Error posting project: ' + error.message
+        notification.classList.remove('hidden')
+        notification.className =
+          'mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative'
       }
-      console.error(error);
+      console.error(error)
     } else {
       if (notification) {
-        notification.textContent = 'Project posted successfully!';
-        notification.classList.remove('hidden');
-        notification.className = 'mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative';
+        notification.textContent = 'Project posted successfully!'
+        notification.classList.remove('hidden')
+        notification.className =
+          'mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative'
       }
-      form.reset();
-      fetchProjects();
+      form.reset()
+      fetchProjects()
     }
   } catch (error) {
     if (notification) {
-      notification.textContent = 'Error posting project.';
-      notification.classList.remove('hidden');
-      notification.className = 'mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative';
+      notification.textContent = 'Error posting project.'
+      notification.classList.remove('hidden')
+      notification.className =
+        'mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative'
     }
-    console.error('Error posting project:', error);
+    console.error('Error posting project:', error)
   } finally {
     if (submitBtn && btnText && btnLoading) {
-      (submitBtn as HTMLButtonElement).disabled = false;
-      btnText.classList.remove('hidden');
-      btnLoading.classList.add('hidden');
+      ;(submitBtn as HTMLButtonElement).disabled = false
+      btnText.classList.remove('hidden')
+      btnLoading.classList.add('hidden')
     }
   }
 }
 
 async function searchProjects(event: Event) {
-  event.preventDefault();
-  const form = event.target as HTMLFormElement;
-  const keyword = (form.elements.namedItem('keyword') as HTMLInputElement)?.value;
-  const minBudget = (form.elements.namedItem('minBudget') as HTMLInputElement)?.value;
-  const maxBudget = (form.elements.namedItem('maxBudget') as HTMLInputElement)?.value;
+  event.preventDefault()
+  const form = event.target as HTMLFormElement
+  const keyword = (form.elements.namedItem('keyword') as HTMLInputElement)
+    ?.value
+  const minBudget = (form.elements.namedItem('minBudget') as HTMLInputElement)
+    ?.value
+  const maxBudget = (form.elements.namedItem('maxBudget') as HTMLInputElement)
+    ?.value
 
-  let query = supabase.from('projects').select('*');
+  let query = supabase.from('projects').select('*')
 
   if (keyword) {
-    query = query.ilike('title', `%${keyword}%`).or(`description.ilike.%${keyword}%`);
+    query = query
+      .ilike('title', `%${keyword}%`)
+      .or(`description.ilike.%${keyword}%`)
   }
   if (minBudget) {
-    query = query.gte('budget', parseFloat(minBudget));
+    query = query.gte('budget', parseFloat(minBudget))
   }
   if (maxBudget) {
-    query = query.lte('budget', parseFloat(maxBudget));
+    query = query.lte('budget', parseFloat(maxBudget))
   }
 
-  const { data, error } = await query;
-  if (data) searchResults = data;
-  if (error) console.error(error);
+  const { data, error } = await query
+  if (data) searchResults = data
+  if (error) console.error(error)
 }
 ---
 
@@ -117,7 +129,10 @@ async function searchProjects(event: Event) {
     <section class="projects-hero">
       <div class="container">
         <h1 class="page-title">Projects Marketplace</h1>
-        <p class="subtitle">Find work or post projects to connect with talented designers and developers</p>
+        <p class="subtitle">
+          Find work or post projects to connect with talented designers and
+          developers
+        </p>
       </div>
       <div class="hero-shapes">
         <div class="shape shape-1"></div>
@@ -129,11 +144,16 @@ async function searchProjects(event: Event) {
       <div class="container">
         <h2 class="section-title">Browse by Category</h2>
         <div class="categories">
-          {categories.map((category) => (
-            <a href={`#${category.toLowerCase().replace(/\s+/g, '-')}`} class="category-pill">
-              {category}
-            </a>
-          ))}
+          {
+            categories.map((category) => (
+              <a
+                href={`#${category.toLowerCase().replace(/\s+/g, '-')}`}
+                class="category-pill"
+              >
+                {category}
+              </a>
+            ))
+          }
         </div>
       </div>
     </section>
@@ -142,62 +162,93 @@ async function searchProjects(event: Event) {
       <div class="container">
         <div class="tab-container">
           <div class="tabs">
-            <button class="tab-button active" data-tab="search">Find Projects</button>
+            <button class="tab-button active" data-tab="search"
+              >Find Projects</button
+            >
             <button class="tab-button" data-tab="post">Post a Project</button>
           </div>
-          
+
           <div class="tab-content" id="search-tab">
             <form onsubmit="searchProjects" class="search-form">
               <h2 class="form-title">Search Available Projects</h2>
               <div class="form-grid">
                 <div class="form-group">
                   <label for="keyword">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                     Keywords
                   </label>
-                  <input 
-                    type="text" 
-                    id="keyword" 
-                    name="keyword" 
-                    class="form-control" 
-                    placeholder="Search by title or description" 
+                  <input
+                    type="text"
+                    id="keyword"
+                    name="keyword"
+                    class="form-control"
+                    placeholder="Search by title or description"
                   />
                 </div>
-                
+
                 <div class="form-group">
                   <label for="minBudget">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
                     </svg>
                     Min Budget
                   </label>
-                  <input 
-                    type="number" 
-                    id="minBudget" 
-                    name="minBudget" 
-                    class="form-control" 
-                    placeholder="Min $" 
+                  <input
+                    type="number"
+                    id="minBudget"
+                    name="minBudget"
+                    class="form-control"
+                    placeholder="Min $"
                   />
                 </div>
-                
+
                 <div class="form-group">
                   <label for="maxBudget">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
                     </svg>
                     Max Budget
                   </label>
-                  <input 
-                    type="number" 
-                    id="maxBudget" 
-                    name="maxBudget" 
-                    class="form-control" 
-                    placeholder="Max $" 
+                  <input
+                    type="number"
+                    id="maxBudget"
+                    name="maxBudget"
+                    class="form-control"
+                    placeholder="Max $"
                   />
                 </div>
-                
+
                 <div class="form-group button-group">
                   <button type="submit" class="submit-button">
                     Search Projects
@@ -206,115 +257,203 @@ async function searchProjects(event: Event) {
               </div>
             </form>
           </div>
-          
+
           <div class="tab-content hidden" id="post-tab">
             <form onsubmit="createProject" class="post-form">
               <h2 class="form-title">Post a New Project</h2>
-              
+
               <div class="form-group">
                 <label for="title">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
                   </svg>
                   Project Title
                 </label>
-                <input 
-                  type="text" 
-                  id="title" 
-                  name="title" 
-                  class="form-control" 
-                  placeholder="Enter a descriptive title" 
-                  required 
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  class="form-control"
+                  placeholder="Enter a descriptive title"
+                  required
                 />
               </div>
-              
+
               <div class="form-group">
                 <label for="description">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h7"></path>
                   </svg>
                   Project Description
                 </label>
-                <textarea 
-                  id="description" 
-                  name="description" 
-                  class="form-control" 
-                  rows="4" 
-                  placeholder="Describe your project requirements in detail" 
-                  required
-                ></textarea>
+                <textarea
+                  id="description"
+                  name="description"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Describe your project requirements in detail"
+                  required></textarea>
               </div>
-              
+
               <div class="form-group">
                 <label for="budget">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
                   </svg>
                   Budget ($)
                 </label>
-                <input 
-                  type="number" 
-                  id="budget" 
-                  name="budget" 
-                  class="form-control" 
-                  min="100" 
-                  placeholder="Your budget in USD" 
-                  required 
+                <input
+                  type="number"
+                  id="budget"
+                  name="budget"
+                  class="form-control"
+                  min="100"
+                  placeholder="Your budget in USD"
+                  required
                 />
               </div>
-              
+
               <div class="form-group">
                 <label for="category">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                    ></path>
                   </svg>
                   Category
                 </label>
-                <select id="category" name="category" class="form-control" required>
+                <select
+                  id="category"
+                  name="category"
+                  class="form-control"
+                  required
+                >
                   <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option value={category.toLowerCase().replace(/\s+/g, '-')}>{category}</option>
-                  ))}
+                  {
+                    categories.map((category) => (
+                      <option
+                        value={category.toLowerCase().replace(/\s+/g, '-')}
+                      >
+                        {category}
+                      </option>
+                    ))
+                  }
                 </select>
               </div>
-              
+
               <div class="form-group">
                 <label for="deadline">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    ></path>
                   </svg>
                   Deadline
                 </label>
-                <input 
-                  type="date" 
-                  id="deadline" 
-                  name="deadline" 
-                  class="form-control" 
-                  required 
+                <input
+                  type="date"
+                  id="deadline"
+                  name="deadline"
+                  class="form-control"
+                  required
                 />
               </div>
-              
+
               <div class="form-group">
                 <label class="checkbox-label">
                   <input type="checkbox" name="terms" required />
-                  <span>I agree to the <a href="#" class="text-link">terms and conditions</a></span>
+                  <span
+                    >I agree to the <a href="#" class="text-link"
+                      >terms and conditions</a
+                    ></span
+                  >
                 </label>
               </div>
-              
+
               <div class="form-group">
-                <button type="submit" id="project-submit-btn" class="submit-button">
+                <button
+                  type="submit"
+                  id="project-submit-btn"
+                  class="submit-button"
+                >
                   <span id="project-btn-text">Post Project</span>
                   <span id="project-btn-loading" class="hidden">
-                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Posting...
                   </span>
                 </button>
               </div>
             </form>
-            <div id="project-notification" class="hidden mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert" aria-live="polite"></div>
+            <div
+              id="project-notification"
+              class="hidden mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
+              role="alert"
+              aria-live="polite"
+            >
+            </div>
           </div>
         </div>
       </div>
@@ -324,11 +463,22 @@ async function searchProjects(event: Event) {
       <div class="container">
         <h2 class="section-title">Projects Available</h2>
         <div class="projects-grid">
-          {searchResults.map((project, index) => (
-            <div class="project-wrapper" data-aos="fade-up" data-aos-delay={index * 100}>
-              <ProjectCard title={project.title} description={project.description} budget={project.budget} clientName={project.clientName} />
-            </div>
-          ))}
+          {
+            searchResults.map((project, index) => (
+              <div
+                class="project-wrapper"
+                data-aos="fade-up"
+                data-aos-delay={index * 100}
+              >
+                <ProjectCard
+                  title={project.title}
+                  description={project.description}
+                  budget={project.budget}
+                  clientName={project.clientName}
+                />
+              </div>
+            ))
+          }
         </div>
       </div>
     </section>
@@ -353,11 +503,26 @@ async function searchProjects(event: Event) {
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
   :root {
-    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-    --secondary-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
-    --accent-gradient: linear-gradient(135deg, #14b8a6 0%, #0ea5e9 50%, #6366f1 100%);
+    --primary-gradient: linear-gradient(
+      135deg,
+      #6366f1 0%,
+      #8b5cf6 50%,
+      #ec4899 100%
+    );
+    --secondary-gradient: linear-gradient(
+      135deg,
+      #3b82f6 0%,
+      #8b5cf6 50%,
+      #d946ef 100%
+    );
+    --accent-gradient: linear-gradient(
+      135deg,
+      #14b8a6 0%,
+      #0ea5e9 50%,
+      #6366f1 100%
+    );
     --text-gradient: linear-gradient(90deg, #3b82f6, #8b5cf6, #d946ef);
-    
+
     --primary-color: #6366f1;
     --secondary-color: #8b5cf6;
     --accent-color: #14b8a6;
@@ -366,11 +531,14 @@ async function searchProjects(event: Event) {
     --bg-light: #f8fafc;
     --bg-lighter: #ffffff;
     --bg-dark: #1e293b;
-    
-    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    
+
+    --shadow-sm:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --shadow-md:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --shadow-lg:
+      0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
     --border-radius-sm: 0.375rem;
     --border-radius-md: 0.75rem;
     --border-radius-lg: 1.5rem;
@@ -394,7 +562,11 @@ async function searchProjects(event: Event) {
   .projects-hero {
     position: relative;
     padding: 4rem 0 3rem;
-    background-image: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
+    background-image: linear-gradient(
+      135deg,
+      rgba(99, 102, 241, 0.05) 0%,
+      rgba(139, 92, 246, 0.1) 100%
+    );
     overflow: hidden;
   }
 
@@ -406,14 +578,18 @@ async function searchProjects(event: Event) {
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
-    animation: fade-in 1s ease, slide-up 1s ease;
+    animation:
+      fade-in 1s ease,
+      slide-up 1s ease;
   }
 
   .subtitle {
     font-size: 1.2rem;
     color: var(--text-light);
     margin-bottom: 2rem;
-    animation: fade-in 1.2s ease, slide-up 1.2s ease;
+    animation:
+      fade-in 1.2s ease,
+      slide-up 1.2s ease;
     max-width: 800px;
   }
 
@@ -608,7 +784,9 @@ async function searchProjects(event: Event) {
     border-radius: var(--border-radius-sm);
     background-color: white;
     color: var(--text-color);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .form-control:focus {
@@ -655,7 +833,9 @@ async function searchProjects(event: Event) {
     color: white;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .submit-button:hover {
@@ -726,7 +906,9 @@ async function searchProjects(event: Event) {
     font-weight: 600;
     color: var (--primary-color);
     text-decoration: none;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
     box-shadow: var(--shadow-md);
   }
 
@@ -801,13 +983,15 @@ async function searchProjects(event: Event) {
     }
   }
 
-  [data-aos="fade-up"] {
+  [data-aos='fade-up'] {
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s ease;
   }
 
-  [data-aos="fade-up"].aos-animate {
+  [data-aos='fade-up'].aos-animate {
     opacity: 1;
     transform: translateY(0);
   }
@@ -815,44 +999,47 @@ async function searchProjects(event: Event) {
 
 <script>
   // Tab switching functionality
-  const tabButtons = Array.from(document.querySelectorAll('.tab-button'));
-  const tabContents = Array.from(document.querySelectorAll('.tab-content'));
+  const tabButtons = Array.from(document.querySelectorAll('.tab-button'))
+  const tabContents = Array.from(document.querySelectorAll('.tab-content'))
 
-  tabButtons.forEach(button => {
+  tabButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-      tabContents.forEach(content => content.classList.add('hidden'));
-      const tabId = button.getAttribute('data-tab');
-      const tabContent = document.getElementById(`${tabId}-tab`);
-      if (tabContent) tabContent.classList.remove('hidden');
-    });
-  });
+      tabButtons.forEach((btn) => btn.classList.remove('active'))
+      button.classList.add('active')
+      tabContents.forEach((content) => content.classList.add('hidden'))
+      const tabId = button.getAttribute('data-tab')
+      const tabContent = document.getElementById(`${tabId}-tab`)
+      if (tabContent) tabContent.classList.remove('hidden')
+    })
+  })
 
   // Simple AOS (Animate On Scroll) implementation
   document.addEventListener('DOMContentLoaded', () => {
-    const animatedElements = document.querySelectorAll('[data-aos]');
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('aos-animate');
-        }
-      });
-    }, {
-      threshold: 0.1
-    });
-    
-    animatedElements.forEach(element => {
-      observer.observe(element);
-      
-      // Apply delay if specified
-      const delay = element.getAttribute('data-aos-delay');
-      if (delay) {
-        element.style.transitionDelay = `${delay}ms`;
-      }
-    });
+    const animatedElements = document.querySelectorAll('[data-aos]')
 
-    if (typeof fetchProjects === 'function') fetchProjects();
-  });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('aos-animate')
+          }
+        })
+      },
+      {
+        threshold: 0.1,
+      }
+    )
+
+    animatedElements.forEach((element) => {
+      observer.observe(element)
+
+      // Apply delay if specified
+      const delay = element.getAttribute('data-aos-delay')
+      if (delay) {
+        element.style.transitionDelay = `${delay}ms`
+      }
+    })
+
+    if (typeof fetchProjects === 'function') fetchProjects()
+  })
 </script>
