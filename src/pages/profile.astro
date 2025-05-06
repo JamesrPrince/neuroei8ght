@@ -1110,23 +1110,34 @@ const userId = '123' // This would normally be fetched from the authenticated us
   .tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
     margin-bottom: 1.5rem;
     background-color: white;
-    padding: 0.5rem;
     border-radius: var(--border-radius-md);
     box-shadow: var(--shadow-sm);
+    overflow: hidden;
   }
 
   .tab-button {
-    padding: 0.75rem 1.5rem;
+    padding: 1rem;
     background: transparent;
     border: none;
-    border-radius: var(--border-radius-sm);
+    font-weight: 600;
     color: var(--text-light);
-    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .tab-button::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background-image: var(--primary-gradient);
+    transition: width 0.3s ease;
   }
 
   .tab-button:hover {
@@ -1134,8 +1145,11 @@ const userId = '123' // This would normally be fetched from the authenticated us
   }
 
   .tab-button.active {
-    background-image: var(--primary-gradient);
-    color: white;
+    color: var(--primary-color);
+  }
+
+  .tab-button.active::after {
+    width: 100%;
   }
 
   .tab-content {
@@ -1163,6 +1177,12 @@ const userId = '123' // This would normally be fetched from the authenticated us
   }
 
   @media (min-width: 640px) {
+    .portfolio-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
     .portfolio-grid {
       grid-template-columns: repeat(2, 1fr);
     }
@@ -1325,6 +1345,10 @@ const userId = '123' // This would normally be fetched from the authenticated us
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
     outline: none;
+  }
+
+  .form-control::placeholder {
+    color: #a1a1aa;
   }
 
   .help-text {

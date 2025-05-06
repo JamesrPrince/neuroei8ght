@@ -1,5 +1,10 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"]
+  "include": [".astro/types.d.ts", "src/**/*"], // Be more specific with include
+  "exclude": [
+    "dist",
+    "node_modules", // Explicitly exclude node_modules
+    "**/*.test.ts", // Exclude test files
+    "**/*.spec.ts" // Exclude spec files
+  ]
 }

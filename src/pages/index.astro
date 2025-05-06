@@ -2,7 +2,6 @@
 import Layout from '../layouts/Layout.astro'
 import AuthForm from '../components/AuthForm.astro'
 import ProjectCard from '../components/ProjectCard.astro'
-import '../assets/styles/global.css'
 
 // Featured Projects
 const featuredProjects = [
@@ -853,14 +852,22 @@ const stats = [
   </section>
 
   <script>
-    window.addEventListener('DOMContentLoaded', function () {
+    // Wait for both DOM and window load events to ensure all resources are loaded
+    document.addEventListener('DOMContentLoaded', handlePageLoad)
+    window.addEventListener('load', handlePageLoad)
+
+    function handlePageLoad() {
+      // Add class to html element for transitions
+      document.documentElement.classList.add('loaded')
+
+      // Remove the loading overlay with a slight delay
       const overlay = document.getElementById('global-loading-overlay')
       if (overlay) {
-        ;(overlay as HTMLElement).style.opacity = '0'
+        overlay.style.opacity = '0'
         setTimeout(() => {
-          ;(overlay as HTMLElement).style.display = 'none'
+          overlay.style.display = 'none'
         }, 300)
       }
-    })
+    }
   </script>
 </Layout>

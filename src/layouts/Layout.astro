@@ -1,13 +1,11 @@
 ---
 import { ViewTransitions } from 'astro:transitions'
 import Header from '../components/Header.astro'
-// Import the correct function and remove unused import
-import { getBrowserLanguage } from '../i18n/utils'
+import { DEFAULT_LANGUAGE } from '../i18n/config'
 import '../assets/styles/global.css'
 
-// Use the available function to get the language
-const lang = getBrowserLanguage()
-// Remove unused translation function declaration
+// Use default language for SSR
+const lang = DEFAULT_LANGUAGE
 
 interface Props {
   title: string
@@ -47,20 +45,39 @@ const { title } = Astro.props
   </div>
 </div>
 
-<html lang={lang}>
+<html lang={lang} data-astro-transition-fallback="none">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Astro description" />
+    <meta name="description" content="NeuroEight - Connecting Talent with Opportunity" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <title>{title}</title>
     <ViewTransitions />
   </head>
   <body>
     <Header />
     <slot />
-    <script src="/assets/particles.js"></script>
+    <!-- Load particles.js and custom script with defer to prevent build issues -->
+    <script is:inline defer src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script defer src="/assets/particles.js"></script>
+    <script is:inline>
+      // Use window.onload for better reliability with external resources
+      window.addEventListener('load', function() {
+        // Remove loading overlay
+        const overlay = document.getElementById('global-loading-overlay');
+        if (overlay) {
+          overlay.style.opacity = '0';
+          setTimeout(() => {
+            overlay.style.display = 'none';
+          }, 300);
+        }
+        
+        // Mark document as loaded for transitions
+        document.documentElement.classList.add('loaded');
+      });
+    </script>
   </body>
 </html>
 

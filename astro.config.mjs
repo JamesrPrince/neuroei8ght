@@ -3,9 +3,6 @@ import { defineConfig } from 'astro/config'
 import { loadEnv } from 'vite'
 import tailwind from '@astrojs/tailwind'
 import vercel from '@astrojs/vercel/serverless'
-// Remove unused imports
-// import tailwindcss from "tailwindcss";
-// import autoprefixer from "autoprefixer";
 
 // Load environment variables
 const env = loadEnv(process.env.NODE_ENV, process.cwd(), '')
@@ -24,29 +21,42 @@ export default defineConfig({
         env.STRIPE_SECRET_KEY || ''
       ),
     },
+    build: {
+      // Explicitly exclude test files from the Vite build
+      exclude: ['**/*.test.ts', '**/*.spec.ts'],
+    },
     css: {
       // Improve CSS processing
       devSourcemap: true,
-      // Remove explicit postcss config, let the integration handle it
-      // postcss: {
-      //   plugins: [tailwindcss, autoprefixer],
-      // },
+    },
+    // Improve optimization settings
+    optimizeDeps: {
+      exclude: ['astro:*'],
+      // Ensure particles.js is pre-bundled
+      include: ['@supabase/supabase-js', 'zustand']
+    },
+    ssr: {
+      // Fix issues with packages in SSR mode
+      noExternal: [
+        'path-to-regexp',
+        'react-icons',
+        '@stripe/stripe-js',
+        'astro-i18n'
+      ],
     },
   },
-  // Remove build.format as it's not relevant for server output
-  // build: {
-  //   format: "file",
-  // },
   // Explicitly link stylesheets instead of potentially inlining them
   inlineStylesheets: 'always',
   integrations: [
     tailwind({
-      // Ensure Tailwind can find all content
-      // config: { // Keep applyBaseStyles if needed, otherwise remove this config block too
-      //   applyBaseStyles: false,
-      // },
-    }),
+      // Ensure Tailwind config is properly integrated
+      config: { applyBaseStyles: false }
+    })
   ],
   output: 'server',
-  adapter: vercel(),
+  adapter: vercel({
+    // Improve Vercel deployment
+    analytics: true,
+    maxDuration: 60
+  }),
 })
