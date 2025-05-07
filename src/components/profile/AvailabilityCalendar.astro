@@ -1,0 +1,886 @@
+---
+interface Props {
+  userId: string
+  timezone?: string
+  isViewMode?: boolean
+}
+
+const { userId, timezone = 'UTC', isViewMode = false } = Astro.props
+
+// Define timeslot availability structure
+interface TimeSlot {
+  day: string
+  startTime: string
+  endTime: string
+  isAvailable: boolean
+  isBooked: boolean
+  bookedBy?: string
+}
+
+// Days of the week
+const daysOfWeek = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+]
+
+// Time slots (9 AM to 6 PM)
+const timeSlots = [
+  '09:00',
+  '10:00',
+  '11:00',
+  '12:00',
+  '13:00',
+  '14:00',
+  '15:00',
+  '16:00',
+  '17:00',
+]
+
+import { supabase } from '../../lib/supabase.js'
+
+// Fetch user availability data
+let userAvailability: TimeSlot[] = []
+
+// Default availability (initially set all weekdays from 9-5 as available)
+const defaultAvailability: TimeSlot[] = daysOfWeek.flatMap((day) =>
+  timeSlots.map((time) => ({
+    day,
+    startTime: time,
+    endTime: `${parseInt(time.split(':')[0]) + 1}:00`,
+    isAvailable: day !== 'Saturday' && day !== 'Sunday',
+    isBooked: false,
+  }))
+)
+
+// Fetch any saved availability and bookings
+async function fetchAvailabilityData() {
+  if (userId) {
+    try {
+      // Fetch availability settings
+      const { data: availabilityData, error: availabilityError } =
+        await supabase.from('availability').select('*').eq('user_id', userId)
+
+      if (availabilityError) throw availabilityError
+
+      // Fetch bookings
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('provider_id', userId)
+
+      if (bookingsError) throw bookingsError
+
+      // If we have saved availability data, use it
+      if (availabilityData && availabilityData.length > 0) {
+        userAvailability = JSON.parse(availabilityData[0].time_slots)
+      } else {
+        // Otherwise use default availability
+        userAvailability = defaultAvailability
+      }
+
+      // Apply bookings to availability data
+      if (bookingsData && bookingsData.length > 0) {
+        bookingsData.forEach((booking) => {
+          const matchingSlot = userAvailability.find(
+            (slot) =>
+              slot.day === booking.day && slot.startTime === booking.start_time
+          )
+
+          if (matchingSlot) {
+            matchingSlot.isBooked = true
+            matchingSlot.bookedBy = booking.client_id
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching availability data:', error)
+      userAvailability = defaultAvailability
+    }
+  } else {
+    userAvailability = defaultAvailability
+  }
+}
+
+// For initial rendering
+if (isSupabaseConfigured()) {
+  await fetchAvailabilityData()
+} else {
+  userAvailability = defaultAvailability
+}
+
+// Helper function to check if Supabase is configured
+function isSupabaseConfigured() {
+  return typeof supabase !== 'undefined' && supabase !== null
+}
+
+// Calculate the current week dates for display
+const today = new Date()
+const currentWeekDates = daysOfWeek.map((day, index) => {
+  const dayOffset = index - today.getDay() + 1 // Monday is 1, Sunday is 7
+  const date = new Date(today)
+  date.setDate(today.getDate() + dayOffset)
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+})
+---
+
+<div class="availability-calendar">
+  <div class="calendar-header">
+    <h3 class="calendar-title">Availability Schedule</h3>
+
+    <div class="calendar-controls">
+      <div class="current-timezone">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="icon"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <span>Timezone: {timezone}</span>
+      </div>
+
+      {
+        !isViewMode && (
+          <div class="sync-controls">
+            <button id="sync-calendar-btn" class="sync-button">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="icon"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              Sync with Google Calendar
+            </button>
+
+            <button id="save-availability-btn" class="save-button">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="icon"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
+              </svg>
+              Save Availability
+            </button>
+          </div>
+        )
+      }
+    </div>
+  </div>
+
+  <div class="calendar-grid">
+    <!-- Time column -->
+    <div class="time-column">
+      <div class="day-header"></div>
+      <!-- Empty corner cell -->
+      {timeSlots.map((time) => <div class="time-slot">{time}</div>)}
+    </div>
+
+    <!-- Day columns -->
+    {
+      daysOfWeek.map((day, dayIndex) => (
+        <div class="day-column">
+          <div class="day-header">
+            <div class="day-name">{day}</div>
+            <div class="day-date">{currentWeekDates[dayIndex]}</div>
+          </div>
+
+          {timeSlots.map((time) => {
+            const slot = userAvailability.find(
+              (s) => s.day === day && s.startTime === time
+            ) || { isAvailable: false, isBooked: false }
+
+            return (
+              <div
+                class:list={[
+                  'calendar-cell',
+                  { available: slot.isAvailable && !slot.isBooked },
+                  { booked: slot.isBooked },
+                  { unavailable: !slot.isAvailable },
+                ]}
+                data-day={day}
+                data-time={time}
+              >
+                {slot.isBooked && <div class="booked-indicator">Booked</div>}
+              </div>
+            )
+          })}
+        </div>
+      ))
+    }
+  </div>
+
+  {
+    isViewMode && (
+      <div class="booking-controls">
+        <button id="book-appointment-btn" class="book-button">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="icon"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          Book Appointment
+        </button>
+      </div>
+    )
+  }
+
+  <div id="booking-modal" class="booking-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4>Book an Appointment</h4>
+        <button class="close-modal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="selected-slot-info">
+          <p>You're booking an appointment for:</p>
+          <p id="selected-day-time" class="selected-time">Loading...</p>
+        </div>
+        <form id="booking-form">
+          <div class="form-group">
+            <label for="booking-name">Your Name</label>
+            <input type="text" id="booking-name" required />
+          </div>
+          <div class="form-group">
+            <label for="booking-email">Your Email</label>
+            <input type="email" id="booking-email" required />
+          </div>
+          <div class="form-group">
+            <label for="booking-message">Message (optional)</label>
+            <textarea id="booking-message"></textarea>
+          </div>
+          <button type="submit" class="confirm-booking-btn"
+            >Confirm Booking</button
+          >
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification" class="notification hidden" aria-live="polite"></div>
+</div>
+
+<style>
+  .availability-calendar {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(to right, #f9fafb, #f3f4f6);
+  }
+
+  .calendar-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .calendar-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .current-timezone {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #64748b;
+    background-color: #f3f4f6;
+    padding: 0.5rem 0.75rem;
+    border-radius: 9999px;
+  }
+
+  .icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .sync-controls {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .sync-button,
+  .save-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+  }
+
+  .sync-button {
+    background-color: #f3f4f6;
+    color: #4b5563;
+  }
+
+  .sync-button:hover {
+    background-color: #e5e7eb;
+  }
+
+  .save-button {
+    background-image: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+  }
+
+  .save-button:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  }
+
+  .calendar-grid {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .time-column,
+  .day-column {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .time-column {
+    background-color: #f9fafb;
+    min-width: 80px;
+    max-width: 80px;
+  }
+
+  .day-header {
+    height: 60px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .day-name {
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .day-date {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  .time-slot {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+
+  .calendar-cell {
+    height: 60px;
+    border-bottom: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .available {
+    background-color: #dcfce7;
+  }
+
+  .available:hover {
+    background-color: #bbf7d0;
+    transform: scale(1.02);
+  }
+
+  .booked {
+    background-color: #dbeafe;
+  }
+
+  .unavailable {
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+  }
+
+  .booked-indicator {
+    font-size: 0.75rem;
+    color: #2563eb;
+    font-weight: 500;
+  }
+
+  .booking-controls {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .book-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    background-image: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+  }
+
+  .book-button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Modal Styles */
+  .booking-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow:
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 500px;
+    overflow: hidden;
+    animation: modal-appear 0.3s ease-out;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  }
+
+  .modal-header h4 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .close-modal {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #64748b;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .selected-slot-info {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .selected-time {
+    font-weight: 600;
+    color: #2563eb;
+    font-size: 1.125rem;
+    margin: 0.5rem 0;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #1e293b;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 1rem;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  .confirm-booking-btn {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.375rem;
+    background-image: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1.5rem;
+  }
+
+  .confirm-booking-btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  }
+
+  .notification {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    background-color: #10b981;
+    color: white;
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transform: translateY(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .notification.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .notification.hidden {
+    display: none;
+  }
+
+  .notification.error {
+    background-color: #ef4444;
+  }
+
+  @keyframes modal-appear {
+    from {
+      transform: translateY(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .calendar-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .calendar-controls {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .sync-controls {
+      width: 100%;
+    }
+
+    .sync-button,
+    .save-button {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .calendar-grid {
+      overflow-x: auto;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const userId = document
+      .querySelector('.availability-calendar')
+      ?.getAttribute('data-user-id')
+    const isViewMode =
+      document
+        .querySelector('.availability-calendar')
+        ?.getAttribute('data-view-mode') === 'true'
+
+    // Time slot toggling for editing availability
+    if (!isViewMode) {
+      const calendarCells = document.querySelectorAll(
+        '.calendar-cell:not(.booked)'
+      )
+
+      calendarCells.forEach((cell) => {
+        cell.addEventListener('click', () => {
+          if (cell.classList.contains('unavailable')) {
+            cell.classList.remove('unavailable')
+            cell.classList.add('available')
+          } else if (cell.classList.contains('available')) {
+            cell.classList.remove('available')
+            cell.classList.add('unavailable')
+          }
+        })
+      })
+
+      // Save availability settings
+      const saveButton = document.getElementById('save-availability-btn')
+
+      if (saveButton) {
+        saveButton.addEventListener('click', async () => {
+          // Collect availability settings
+          const availabilitySettings = []
+          const cells = document.querySelectorAll('.calendar-cell')
+
+          cells.forEach((cell) => {
+            const day = cell.getAttribute('data-day')
+            const time = cell.getAttribute('data-time')
+            const endTime = `${parseInt(time.split(':')[0]) + 1}:00`
+            const isAvailable = cell.classList.contains('available')
+            const isBooked = cell.classList.contains('booked')
+
+            availabilitySettings.push({
+              day,
+              startTime: time,
+              endTime,
+              isAvailable,
+              isBooked,
+            })
+          })
+
+          // Save to database
+          try {
+            const { error } = await supabase.from('availability').upsert(
+              {
+                user_id: userId,
+                time_slots: JSON.stringify(availabilitySettings),
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: 'user_id' }
+            )
+
+            if (error) throw error
+
+            showNotification('Availability settings saved successfully!')
+          } catch (error) {
+            console.error('Error saving availability:', error)
+            showNotification('Failed to save availability settings.', 'error')
+          }
+        })
+      }
+
+      // Sync with Google Calendar (simplified mock)
+      const syncButton = document.getElementById('sync-calendar-btn')
+
+      if (syncButton) {
+        syncButton.addEventListener('click', () => {
+          showNotification('Google Calendar sync feature coming soon!')
+        })
+      }
+    }
+
+    // Booking functionality for view mode
+    if (isViewMode) {
+      const bookButton = document.getElementById('book-appointment-btn')
+      const modal = document.getElementById('booking-modal')
+      const closeModal = document.querySelector('.close-modal')
+      const availableCells = document.querySelectorAll(
+        '.calendar-cell.available'
+      )
+      let selectedCell = null
+
+      // Open modal when clicking on available time slot
+      availableCells.forEach((cell) => {
+        cell.addEventListener('click', () => {
+          selectedCell = cell
+          const day = cell.getAttribute('data-day')
+          const time = cell.getAttribute('data-time')
+
+          document.getElementById('selected-day-time').textContent =
+            `${day} at ${time}`
+          modal.style.display = 'flex'
+        })
+      })
+
+      // Book button opens modal without selecting a specific slot
+      if (bookButton) {
+        bookButton.addEventListener('click', () => {
+          document.getElementById('selected-day-time').textContent =
+            'Please select a time slot'
+          modal.style.display = 'flex'
+        })
+      }
+
+      // Close modal
+      if (closeModal) {
+        closeModal.addEventListener('click', () => {
+          modal.style.display = 'none'
+        })
+      }
+
+      // Click outside to close
+      window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none'
+        }
+      })
+
+      // Handle booking form submission
+      const bookingForm = document.getElementById('booking-form')
+
+      if (bookingForm) {
+        bookingForm.addEventListener('submit', async (e) => {
+          e.preventDefault()
+
+          if (!selectedCell) {
+            showNotification('Please select a time slot first', 'error')
+            return
+          }
+
+          const day = selectedCell.getAttribute('data-day')
+          const time = selectedCell.getAttribute('data-time')
+          const name = document.getElementById('booking-name').value
+          const email = document.getElementById('booking-email').value
+          const message = document.getElementById('booking-message').value
+
+          try {
+            // Get the current user
+            const {
+              data: { user },
+              error: userError,
+            } = await supabase.auth.getUser()
+
+            if (userError) throw userError
+
+            // Create booking
+            const { error } = await supabase.from('bookings').insert({
+              provider_id: userId,
+              client_id: user?.id || null,
+              client_name: name,
+              client_email: email,
+              day,
+              start_time: time,
+              end_time: `${parseInt(time.split(':')[0]) + 1}:00`,
+              message,
+              created_at: new Date().toISOString(),
+            })
+
+            if (error) throw error
+
+            // Update UI
+            selectedCell.classList.remove('available')
+            selectedCell.classList.add('booked')
+            selectedCell.innerHTML =
+              '<div class="booked-indicator">Booked</div>'
+
+            // Close modal and show success message
+            modal.style.display = 'none'
+            showNotification('Appointment booked successfully!')
+            bookingForm.reset()
+          } catch (error) {
+            console.error('Error booking appointment:', error)
+            showNotification('Failed to book appointment.', 'error')
+          }
+        })
+      }
+    }
+
+    // Notification helper function
+    function showNotification(message, type = 'success') {
+      const notification = document.getElementById('notification')
+
+      if (notification) {
+        notification.textContent = message
+        notification.classList.remove('hidden', 'error', 'success')
+        notification.classList.add('show', type)
+
+        setTimeout(() => {
+          notification.classList.remove('show')
+          setTimeout(() => {
+            notification.classList.add('hidden')
+          }, 300)
+        }, 3000)
+      }
+    }
+  })
+</script>

@@ -1,0 +1,1072 @@
+---
+// Define interfaces for skill data
+interface Skill {
+  id: string;
+  name: string;
+  level: 'beginner' | 'intermediate' | 'expert';
+  verified: boolean;
+  endorsements: number;
+  certifications?: Certification[];
+}
+
+interface Certification {
+  id: string;
+  name: string;
+  provider: string;
+  issueDate: string;
+  expiryDate?: string;
+  credentialUrl?: string;
+}
+
+interface Props {
+  userId: string;
+  skills?: Skill[];
+}
+
+// Sample skills data - will be replaced with actual data from Supabase
+const sampleSkills: Skill[] = [
+  {
+    id: '1',
+    name: 'UI Design',
+    level: 'expert',
+    verified: true,
+    endorsements: 24,
+    certifications: [
+      {
+        id: 'cert1',
+        name: 'UI/UX Design Certification',
+        provider: 'Interaction Design Foundation',
+        issueDate: '2024-02-15',
+        credentialUrl: '#',
+      },
+    ],
+  },
+  {
+    id: '2',
+    name: 'React Development',
+    level: 'intermediate',
+    verified: true,
+    endorsements: 18,
+    certifications: [
+      {
+        id: 'cert2',
+        name: 'React Certification',
+        provider: 'Meta',
+        issueDate: '2023-09-10',
+        credentialUrl: '#',
+      },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Graphic Design',
+    level: 'expert',
+    verified: true,
+    endorsements: 31,
+    certifications: [
+      {
+        id: 'cert3',
+        name: 'Adobe Creative Suite Mastery',
+        provider: 'Adobe',
+        issueDate: '2023-05-22',
+        credentialUrl: '#',
+      },
+    ],
+  },
+  {
+    id: '4',
+    name: 'User Research',
+    level: 'intermediate',
+    verified: false,
+    endorsements: 12,
+  },
+  {
+    id: '5',
+    name: 'Wireframing',
+    level: 'expert',
+    verified: true,
+    endorsements: 27,
+  },
+  {
+    id: '6',
+    name: 'Figma',
+    level: 'expert',
+    verified: true,
+    endorsements: 39,
+    certifications: [
+      {
+        id: 'cert4',
+        name: 'Figma Advanced Certification',
+        provider: 'Figma',
+        issueDate: '2024-01-05',
+        credentialUrl: '#',
+      },
+    ],
+  },
+  {
+    id: '7',
+    name: 'HTML/CSS',
+    level: 'expert',
+    verified: true,
+    endorsements: 22,
+  },
+  {
+    id: '8',
+    name: 'JavaScript',
+    level: 'intermediate',
+    verified: false,
+    endorsements: 15,
+  },
+  {
+    id: '9',
+    name: 'Responsive Design',
+    level: 'expert',
+    verified: true,
+    endorsements: 28,
+  },
+];
+
+const { userId, skills = sampleSkills } = Astro.props;
+
+// Sort skills by endorsements (highest first)
+const sortedSkills = [...skills].sort((a, b) => b.endorsements - a.endorsements);
+
+// Group by level for the skill meter visualization
+const skillLevels = {
+  beginner: sortedSkills.filter((s) => s.level === 'beginner').length,
+  intermediate: sortedSkills.filter((s) => s.level === 'intermediate').length,
+  expert: sortedSkills.filter((s) => s.level === 'expert').length,
+};
+
+const totalSkills = skills.length;
+const verifiedSkills = skills.filter((s) => s.verified).length;
+const verifiedPercentage = totalSkills > 0 ? (verifiedSkills / totalSkills) * 100 : 0;
+---
+
+<div class="skills-assessment">
+  <div class="skills-header">
+    <h3 class="skills-title">Skills & Certifications</h3>
+    <div class="skills-actions">
+      <button class="action-button" id="add-skill-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Add Skill
+      </button>
+      <button class="action-button secondary" id="take-assessment-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        Take Assessment
+      </button>
+    </div>
+  </div>
+
+  <div class="skills-dashboard">
+    <div class="dashboard-card verification-card">
+      <div class="verification-meter">
+        <svg class="meter-svg" viewBox="0 0 120 120">
+          <circle class="meter-background" cx="60" cy="60" r="54" />
+          <circle 
+            class="meter-value" 
+            cx="60" 
+            cy="60" 
+            r="54" 
+            stroke-dasharray={`${verifiedPercentage * 3.39} 339.292`} 
+            stroke-dashoffset="0"
+          />
+          <text x="60" y="65" text-anchor="middle" class="meter-text">{verifiedPercentage.toFixed(0)}%</text>
+        </svg>
+      </div>
+      <div class="verification-stats">
+        <h4>Skill Verification</h4>
+        <p>{verifiedSkills} of {totalSkills} skills verified</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card proficiency-card">
+      <h4>Skill Proficiency</h4>
+      <div class="level-bars">
+        <div class="level-bar">
+          <div class="level-label">Expert</div>
+          <div class="bar-container">
+            <div class="bar expert" style={`width: ${(skillLevels.expert / totalSkills) * 100}%`}></div>
+          </div>
+          <div class="level-count">{skillLevels.expert}</div>
+        </div>
+        <div class="level-bar">
+          <div class="level-label">Intermediate</div>
+          <div class="bar-container">
+            <div class="bar intermediate" style={`width: ${(skillLevels.intermediate / totalSkills) * 100}%`}></div>
+          </div>
+          <div class="level-count">{skillLevels.intermediate}</div>
+        </div>
+        <div class="level-bar">
+          <div class="level-label">Beginner</div>
+          <div class="bar-container">
+            <div class="bar beginner" style={`width: ${(skillLevels.beginner / totalSkills) * 100}%`}></div>
+          </div>
+          <div class="level-count">{skillLevels.beginner}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="skills-list">
+    {
+      sortedSkills.map((skill) => (
+        <div class="skill-item" data-aos="fade-up" data-aos-delay={sortedSkills.indexOf(skill) * 50}>
+          <div class="skill-header">
+            <div class="skill-name-section">
+              <h4 class="skill-name">
+                {skill.name}
+                {skill.verified && (
+                  <span class="verified-badge" title="Verified Skill">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+                    </svg>
+                  </span>
+                )}
+              </h4>
+              <div class="skill-level">
+                <div class={`level-indicator ${skill.level}`}>
+                  {skill.level.charAt(0).toUpperCase() + skill.level.slice(1)}
+                </div>
+              </div>
+            </div>
+            <div class="skill-endorsements">
+              <button class="endorse-button" data-skill-id={skill.id}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                </svg>
+                <span>{skill.endorsements}</span>
+              </button>
+            </div>
+          </div>
+          
+          {skill.certifications && skill.certifications.length > 0 && (
+            <div class="certifications">
+              {skill.certifications.map((cert) => (
+                <div class="certification">
+                  <div class="cert-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                      <path fill-rule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="cert-info">
+                    <div class="cert-name">{cert.name}</div>
+                    <div class="cert-provider">{cert.provider}</div>
+                    <div class="cert-date">Issued: {new Date(cert.issueDate).toLocaleDateString()}</div>
+                  </div>
+                  <a href={cert.credentialUrl} class="cert-link" target="_blank" rel="noopener noreferrer">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- Add Skill Modal (Hidden by default) -->
+  <div id="add-skill-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add New Skill</h3>
+        <button id="close-modal" class="close-button">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form id="add-skill-form">
+        <div class="form-group">
+          <label for="skill-name">Skill Name</label>
+          <input type="text" id="skill-name" name="skillName" required placeholder="e.g., Photoshop, Java, Project Management" />
+        </div>
+        <div class="form-group">
+          <label for="skill-level">Proficiency Level</label>
+          <select id="skill-level" name="skillLevel" required>
+            <option value="">Select your level</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="expert">Expert</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="has-certification">
+            <input type="checkbox" id="has-certification" name="hasCertification" />
+            I have a certification for this skill
+          </label>
+        </div>
+        <div id="certification-fields" class="hidden">
+          <div class="form-group">
+            <label for="cert-name">Certification Name</label>
+            <input type="text" id="cert-name" name="certName" placeholder="e.g., AWS Certified Developer" />
+          </div>
+          <div class="form-group">
+            <label for="cert-provider">Issuing Organization</label>
+            <input type="text" id="cert-provider" name="certProvider" placeholder="e.g., Amazon Web Services" />
+          </div>
+          <div class="form-group">
+            <label for="cert-date">Issue Date</label>
+            <input type="date" id="cert-date" name="certDate" />
+          </div>
+          <div class="form-group">
+            <label for="cert-url">Credential URL (optional)</label>
+            <input type="url" id="cert-url" name="certUrl" placeholder="https://..." />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="submit-button">Add Skill</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .skills-assessment {
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    animation: fade-in 0.6s ease-out;
+  }
+
+  .skills-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .skills-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+  }
+
+  .skills-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .action-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .action-button svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .action-button.secondary {
+    background-color: white;
+    color: var(--primary-color);
+    border: 1px solid #e5e7eb;
+  }
+
+  .action-button.secondary:hover {
+    border-color: var(--primary-color);
+    background-color: #f9fafb;
+  }
+
+  .skills-dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .skills-dashboard {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .dashboard-card {
+    background-color: #f9fafb;
+    padding: 1.25rem;
+    border-radius: var(--border-radius-md);
+    animation: fade-in 0.6s ease-out;
+  }
+
+  .verification-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .verification-meter {
+    width: 80px;
+    height: 80px;
+    position: relative;
+  }
+
+  .meter-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .meter-background {
+    fill: none;
+    stroke: #e5e7eb;
+    stroke-width: 10;
+  }
+
+  .meter-value {
+    fill: none;
+    stroke: var(--primary-color);
+    stroke-width: 10;
+    stroke-linecap: round;
+    transform-origin: center;
+    transition: stroke-dasharray 1s ease;
+  }
+
+  .meter-text {
+    fill: var(--text-color);
+    font-size: 16px;
+    font-weight: 600;
+    transform: rotate(90deg);
+  }
+
+  .verification-stats h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .verification-stats p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-light);
+  }
+
+  .proficiency-card h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .level-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .level-bar {
+    display: grid;
+    grid-template-columns: 100px 1fr 30px;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .level-label {
+    font-size: 0.875rem;
+  }
+
+  .bar-container {
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease-out;
+  }
+
+  .bar.expert {
+    background-color: #10b981;
+  }
+
+  .bar.intermediate {
+    background-color: #6366f1;
+  }
+
+  .bar.beginner {
+    background-color: #f59e0b;
+  }
+
+  .level-count {
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .skills-list {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .skill-item {
+    background-color: #f9fafb;
+    border-radius: var(--border-radius-md);
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .skill-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .skill-name-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .skill-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .verified-badge {
+    display: inline-flex;
+    color: #10b981;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .skill-level {
+    display: flex;
+    align-items: center;
+  }
+
+  .level-indicator {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  .level-indicator.beginner {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+  }
+
+  .level-indicator.intermediate {
+    background-color: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+  }
+
+  .level-indicator.expert {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+  }
+
+  .skill-endorsements {
+    display: flex;
+    align-items: center;
+  }
+
+  .endorse-button {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .endorse-button svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .endorse-button:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  .certifications {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .certification {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 0.75rem;
+    border-radius: var(--border-radius-sm);
+    animation: slide-in-right 0.4s ease-out;
+  }
+
+  .cert-icon {
+    width: 2rem;
+    height: 2rem;
+    color: var(--primary-color);
+    flex-shrink: 0;
+  }
+
+  .cert-info {
+    flex-grow: 1;
+  }
+
+  .cert-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .cert-provider, .cert-date {
+    font-size: 0.75rem;
+    color: var(--text-light);
+  }
+
+  .cert-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    color: var(--text-light);
+    border-radius: 50%;
+    background-color: white;
+    transition: all 0.2s ease;
+  }
+
+  .cert-link svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .cert-link:hover {
+    color: var(--primary-color);
+    background-color: #f0f9ff;
+    transform: scale(1.1);
+  }
+
+  /* Modal styles */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .modal.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-content {
+    background-color: white;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: scale-in 0.3s ease-out;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+    transition: all 0.2s ease;
+  }
+
+  .close-button:hover {
+    color: var(--text-color);
+  }
+
+  .close-button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  #add-skill-form {
+    padding: 1.5rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="url"],
+  .form-group input[type="date"],
+  .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+
+  .form-group input[type="text"]:focus,
+  .form-group input[type="url"]:focus,
+  .form-group input[type="date"]:focus,
+  .form-group select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    outline: none;
+  }
+
+  .form-group input[type="checkbox"] {
+    margin-right: 0.5rem;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .submit-button {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .submit-button:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes fade-in {
+    from { 
+      opacity: 0; 
+    }
+    to { 
+      opacity: 1; 
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+</style>
+
+<script>
+  // Modal functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const addSkillBtn = document.getElementById('add-skill-btn');
+    const closeModalBtn = document.getElementById('close-modal');
+    const modal = document.getElementById('add-skill-modal');
+    const hasCertificationCheckbox = document.getElementById('has-certification');
+    const certificationFields = document.getElementById('certification-fields');
+    const skillForm = document.getElementById('add-skill-form');
+    
+    // Open modal
+    if (addSkillBtn && modal) {
+      addSkillBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+        
+        // Add entrance animation to modal content
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent) {
+          modalContent.style.animation = 'scale-in 0.3s ease-out';
+        }
+      });
+    }
+    
+    // Close modal
+    if (closeModalBtn && modal) {
+      closeModalBtn.addEventListener('click', () => {
+        modal.classList.remove('show');
+        setTimeout(() => {
+          modal.classList.add('hidden');
+          document.body.style.overflow = ''; // Restore scrolling
+        }, 300);
+      });
+      
+      // Close modal when clicking outside
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModalBtn.click();
+        }
+      });
+    }
+    
+    // Toggle certification fields
+    if (hasCertificationCheckbox && certificationFields) {
+      hasCertificationCheckbox.addEventListener('change', () => {
+        if (hasCertificationCheckbox.checked) {
+          certificationFields.classList.remove('hidden');
+        } else {
+          certificationFields.classList.add('hidden');
+        }
+      });
+    }
+    
+    // Handle form submission
+    if (skillForm) {
+      skillForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // Get form data
+        const formData = new FormData(skillForm);
+        const skillData = {
+          name: formData.get('skillName'),
+          level: formData.get('skillLevel'),
+          hasCertification: formData.get('hasCertification') === 'on',
+          certName: formData.get('certName'),
+          certProvider: formData.get('certProvider'),
+          certDate: formData.get('certDate'),
+          certUrl: formData.get('certUrl')
+        };
+        
+        console.log('Skill data to submit:', skillData);
+        
+        // In a real app, you would send this data to your server
+        // For now, let's just show a success message and close the modal
+        if (closeModalBtn) {
+          closeModalBtn.click();
+        }
+        
+        // Reset the form
+        skillForm.reset();
+        if (certificationFields) {
+          certificationFields.classList.add('hidden');
+        }
+        
+        // Show a success message (we'll simulate this with a notification)
+        const skillsHeader = document.querySelector('.skills-header');
+        if (skillsHeader) {
+          const notification = document.createElement('div');
+          notification.className = 'skill-notification';
+          notification.textContent = `Skill "${skillData.name}" added successfully!`;
+          notification.style.cssText = `
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius-sm);
+            box-shadow: var(--shadow-md);
+            z-index: 100;
+            animation: slide-in-right 0.3s ease-out;
+          `;
+          
+          skillsHeader.appendChild(notification);
+          setTimeout(() => {
+            notification.style.animation = 'fade-out 0.3s ease-in forwards';
+            setTimeout(() => {
+              notification.remove();
+            }, 300);
+          }, 3000);
+        }
+      });
+    }
+    
+    // Endorsement functionality
+    const endorseButtons = document.querySelectorAll('.endorse-button');
+    endorseButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const skillId = this.getAttribute('data-skill-id');
+        const countSpan = this.querySelector('span');
+        
+        // Animate the button
+        this.animate([
+          { transform: 'scale(0.9)' },
+          { transform: 'scale(1.1)' },
+          { transform: 'scale(1)' }
+        ], { duration: 300, easing: 'ease' });
+        
+        // Update the count (in a real app, this would be a server request)
+        if (countSpan) {
+          const currentCount = parseInt(countSpan.textContent);
+          countSpan.textContent = currentCount + 1;
+          
+          // Add temporary highlight effect
+          this.classList.add('endorsed');
+          this.style.backgroundColor = '#e0f2fe';
+          this.style.borderColor = '#3b82f6';
+          this.style.color = '#3b82f6';
+          
+          setTimeout(() => {
+            this.style.backgroundColor = '';
+            this.style.borderColor = '';
+            this.style.color = '';
+          }, 1500);
+        }
+        
+        console.log(`Endorsed skill with ID: ${skillId}`);
+      });
+    });
+    
+    // Take assessment button
+    const takeAssessmentBtn = document.getElementById('take-assessment-btn');
+    if (takeAssessmentBtn) {
+      takeAssessmentBtn.addEventListener('click', () => {
+        alert('This feature is coming soon! Skill assessments will be available in our next update.');
+      });
+    }
+    
+    // Animate skill bars on scroll
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const bars = entry.target.querySelectorAll('.bar');
+            bars.forEach((bar) => {
+              const width = bar.style.width;
+              bar.style.width = '0';
+              setTimeout(() => {
+                bar.style.width = width;
+              }, 100);
+            });
+            
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    
+    const proficiencyCard = document.querySelector('.proficiency-card');
+    if (proficiencyCard) {
+      observer.observe(proficiencyCard);
+    }
+    
+    // Animate verification meter on scroll
+    const meterObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const meter = entry.target.querySelector('.meter-value');
+            if (meter) {
+              const dashArray = meter.getAttribute('stroke-dasharray');
+              meter.setAttribute('stroke-dasharray', '0 339.292');
+              setTimeout(() => {
+                meter.setAttribute('stroke-dasharray', dashArray);
+              }, 100);
+            }
+            meterObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    
+    const verificationCard = document.querySelector('.verification-card');
+    if (verificationCard) {
+      meterObserver.observe(verificationCard);
+    }
+  });
+</script>
